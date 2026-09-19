@@ -202,4 +202,4 @@ x86/
 *.vsix
 
 ### Learn
-.experiments
+experiments/
