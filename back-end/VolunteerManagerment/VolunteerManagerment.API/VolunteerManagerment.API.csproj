@@ -10,4 +10,13 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VolunteerManagerment.Application\VolunteerManagerment.Application.csproj" />
+    <ProjectReference Include="..\VolunteerManagerment.Infrastructure\VolunteerManagerment.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
