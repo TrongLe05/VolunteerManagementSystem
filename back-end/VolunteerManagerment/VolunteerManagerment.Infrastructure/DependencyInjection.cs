@@ -2,8 +2,11 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VolunteerManagerment.Application.Common.Interfaces;
+using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 using VolunteerManagerment.Infrastructure.Authentication;
 using VolunteerManagerment.Infrastructure.Persistence;
+using VolunteerManagerment.Infrastructure.Persistence.Repository;
+using VolunteerManagerment.Infrastructure.Services;
 
 namespace VolunteerManagerment.Infrastructure;
 
@@ -25,7 +28,19 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(provider => 
             provider.GetRequiredService<ApplicationDbContext>());
 
+        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+
+        services.AddScoped<IUserRepository, UserRepository>();
+
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+
+        services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
+
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+
         return services;
     }
 }

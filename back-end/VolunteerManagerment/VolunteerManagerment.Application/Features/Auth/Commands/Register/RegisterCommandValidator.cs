@@ -2,7 +2,7 @@
 
 namespace VolunteerManagerment.Application.Features.Auth.Commands.Register;
 
-public class RegisterCommandValidator : AbstractValidator<RegisterCommands>
+public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
 {
     public RegisterCommandValidator()
     {
