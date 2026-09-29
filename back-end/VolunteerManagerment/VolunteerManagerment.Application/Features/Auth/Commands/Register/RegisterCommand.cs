@@ -3,7 +3,7 @@ using VolunteerManagerment.Application.Features.Auth.DTOs;
 
 namespace VolunteerManagerment.Application.Features.Auth.Commands.Register;
 
-public record RegisterCommands(
+public record RegisterCommand(
     string Username,
     string Email,
     string Password,

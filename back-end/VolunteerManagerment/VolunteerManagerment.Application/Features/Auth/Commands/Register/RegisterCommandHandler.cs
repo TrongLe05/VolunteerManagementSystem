@@ -1,20 +1,29 @@
 ﻿using MediatR;
-using Microsoft.EntityFrameworkCore;
 using VolunteerManagerment.Application.Common.Interfaces;
+using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 using VolunteerManagerment.Application.Features.Auth.DTOs;
 using VolunteerManagerment.Domain.Entities;
 
 namespace VolunteerManagerment.Application.Features.Auth.Commands.Register;
 
-public class RegisterCommandHandler(IApplicationDbContext context) : IRequestHandler<RegisterCommands, RegisterResponseDto>
+public class RegisterCommandHandler(
+    IUserRepository userRepository,
+    IRepository<Role> roleRepository,
+    IUnitOfWork unitOfWork
+) : IRequestHandler<RegisterCommand, RegisterResponseDto>
 {
-    public async Task<RegisterResponseDto> Handle(RegisterCommands request, CancellationToken cancellationToken)
+    public async Task<RegisterResponseDto> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
-        var isExisted = await context.Users
-        .AnyAsync(u => u.Username == request.Username || u.Email == request.Email, cancellationToken);
+        var isExisted = await userRepository.IsUsernameOrEmailExistedAsync(request.Username, request.Email, cancellationToken);
 
         if (isExisted)
             throw new InvalidOperationException("Username hoặc Email đã được sử dụng!");
+
+        var volunteerRole = (await roleRepository.FindAsync(r => r.Code == "VOLUNTEER", cancellationToken))
+            .FirstOrDefault();
+
+        if (volunteerRole == null)
+            throw new InvalidOperationException("Vai trò của tình nguyện viên không tồn tại!");
 
         var newUser = new User
         {
@@ -24,29 +33,20 @@ public class RegisterCommandHandler(IApplicationDbContext context) : IRequestHan
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             IsActive = true,
-            LastLoginAt = DateTimeOffset.UtcNow
+            LastLoginAt = DateTimeOffset.UtcNow,
+            UserRoles = new List<UserRole>
+            {
+                new UserRole { RoleId = volunteerRole.Id }
+            }
         };
 
-        context.Users.Add(newUser);
+        await userRepository.AddAsync(newUser, cancellationToken);
 
-        var volunteerRole = await context.Roles
-               .FirstOrDefaultAsync(r => r.Name == "Volunteer", cancellationToken);
-
-        if (volunteerRole != null)
-        {
-            context.UserRoles.Add(new UserRole
-            {
-                UserId = newUser.Id,
-                RoleId = volunteerRole.Id
-            });
-        }
-
-        await context.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangeAsync(cancellationToken);
 
         return new RegisterResponseDto(
             newUser.Id,
             newUser.Email
-            //newUser.Name
         );
     }
 }
