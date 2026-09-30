@@ -1,14 +1,17 @@
 -- ==============================================================================
 -- DATABASE INITIALIZATION SCRIPT - VOLUNTEER MANAGEMENT SYSTEM
--- Target Database: PostgreSQL 14+
+-- Target Database: PostgreSQL 14+ (Supabase)
+-- Extension: pgcrypto, vector (pgvector)
 -- Description: Hệ thống quản lý hoạt động tình nguyện có xác thực GPS & Face AI
+-- Phiên bản cập nhật: 01/10/2026 (Bổ sung bảng password_reset_tokens cho Quên mật khẩu)
 -- ==============================================================================
 
--- 1. Bật Extensions cần thiết
+-- 1. BẬT EXTENSIONS CẦN THIẾT
 CREATE EXTENSION IF NOT EXISTS pgcrypto; -- Hỗ trợ hàm gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS vector;   -- Hỗ trợ lưu trữ & truy vấn vector đặc trưng khuôn mặt (pgvector)
 
 -- ==============================================================================
--- 2. BẢNG ORGANIZATIONS (Cơ cấu tổ chức Đoàn - Hội theo dạng cây)
+-- 2. BẢNG ORGANIZATIONS (Cơ cấu tổ chức Đoàn - Hội theo dạng cây phân cấp)
 -- ==============================================================================
 CREATE TABLE organizations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -37,7 +40,32 @@ CREATE TABLE users (
 );
 
 -- ==============================================================================
--- 4. BẢNG ROLES & USER_ROLES (Phân quyền người dùng)
+-- 4. BẢNG REFRESH_TOKENS (Quản lý phiên làm việc & Refresh Token Rotation)
+-- ==============================================================================
+CREATE TABLE refresh_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT NOT NULL UNIQUE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
+    revoked_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==============================================================================
+-- 5. BẢNG PASSWORD_RESET_TOKENS (Mã OTP xác thực đặt lại mật khẩu)
+-- ==============================================================================
+CREATE TABLE password_reset_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(100) NOT NULL,              -- Mã OTP (ví dụ 6 số: "582914")
+    expires_at TIMESTAMPTZ NOT NULL,          -- Hết hạn sau 15 phút
+    is_used BOOLEAN NOT NULL DEFAULT FALSE,   -- Đã sử dụng chưa
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==============================================================================
+-- 6. BẢNG ROLES & USER_ROLES (Phân quyền người dùng)
 -- ==============================================================================
 CREATE TABLE roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -53,7 +81,8 @@ CREATE TABLE user_roles (
 );
 
 -- ==============================================================================
--- 5. BẢNG VOLUNTEERS (Hồ sơ đoàn viên / Tình nguyện viên)
+-- 7. BẢNG VOLUNTEERS (Hồ sơ đoàn viên / Tình nguyện viên)
+-- Tuân thủ Nghị định 13/2023/NĐ-CP về Bảo vệ dữ liệu cá nhân
 -- ==============================================================================
 CREATE TABLE volunteers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -68,12 +97,31 @@ CREATE TABLE volunteers (
     class_name VARCHAR(100),
     joined_at DATE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    
+    -- Ghi nhận sự đồng ý thu thập dữ liệu sinh trắc học (Nghị định 13/2023)
+    consent_face_auth BOOLEAN NOT NULL DEFAULT FALSE,
+    consent_given_at TIMESTAMPTZ,
+    
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ==============================================================================
--- 6. BẢNG CAMPAIGNS (Chiến dịch tình nguyện lớn: ví dụ Mùa Hè Xanh, Xuân Tình Nguyện)
+-- 8. BẢNG VOLUNTEER_FACE_TEMPLATES (Lưu vector đặc trưng khuôn mặt mẫu AI)
+-- Dùng ArcFace w600k_mbf (Vector 512 chiều) lưu trong pgvector
+-- ==============================================================================
+CREATE TABLE volunteer_face_templates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    volunteer_id UUID NOT NULL REFERENCES volunteers(id) ON DELETE CASCADE,
+    embedding vector(512) NOT NULL,                      -- Vector 512 chiều trích xuất từ ArcFace
+    model_version VARCHAR(100) NOT NULL DEFAULT 'ArcFace-w600k_mbf-v1',
+    face_crop_url TEXT,                                 -- Ảnh khuôn mặt mẫu đã chuẩn hóa 112x112
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,            -- Đang sử dụng để so khớp hay đã đổi mẫu mới
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ==============================================================================
+-- 9. BẢNG CAMPAIGNS (Chiến dịch tình nguyện lớn: ví dụ Mùa Hè Xanh, Tiếp Sức Mùa Thi)
 -- ==============================================================================
 CREATE TABLE campaigns (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -91,8 +139,8 @@ CREATE TABLE campaigns (
 );
 
 -- ==============================================================================
--- 7. BẢNG ACTIVITIES (Các hoạt động cụ thể thuộc một chiến dịch)
--- Đã bổ sung: credit_hours (giờ công), credit_days (ngày công) để quy đổi thành tích
+-- 10. BẢNG ACTIVITIES (Các hoạt động cụ thể thuộc một chiến dịch)
+-- credit_hours (giờ công), credit_days (ngày công) để quy đổi thành tích
 -- ==============================================================================
 CREATE TABLE activities (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -114,7 +162,7 @@ CREATE TABLE activities (
 );
 
 -- ==============================================================================
--- 8. BẢNG ACTIVITY_LOCATIONS (Địa điểm tổ chức hoạt động & Bán kính GPS cho phép)
+-- 11. BẢNG ACTIVITY_LOCATIONS (Địa điểm tổ chức hoạt động & Bán kính Geofence GPS)
 -- ==============================================================================
 CREATE TABLE activity_locations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -128,7 +176,7 @@ CREATE TABLE activity_locations (
 );
 
 -- ==============================================================================
--- 9. BẢNG ACTIVITY_REGISTRATIONS (Đăng ký tham gia hoạt động của tình nguyện viên)
+-- 12. BẢNG ACTIVITY_REGISTRATIONS (Đăng ký tham gia hoạt động của tình nguyện viên)
 -- ==============================================================================
 CREATE TABLE activity_registrations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -143,7 +191,7 @@ CREATE TABLE activity_registrations (
 );
 
 -- ==============================================================================
--- 10. BẢNG ATTENDANCE_SESSIONS (Các phiên điểm danh Check-in / Check-out do BTC mở)
+-- 13. BẢNG ATTENDANCE_SESSIONS (Các phiên điểm danh Check-in / Check-out do BTC mở)
 -- ==============================================================================
 CREATE TABLE attendance_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -157,18 +205,16 @@ CREATE TABLE attendance_sessions (
 );
 
 -- ==============================================================================
--- 11. BẢNG ATTENDANCES (Bản ghi điểm danh thực tế tại hiện trường)
--- Đã cải thiện:
--- - UNIQUE (attendance_session_id, volunteer_id): Chống điểm danh trùng trong 1 phiên
--- - attended_at thay cho registered_at
--- - verification_method, face_similarity, is_liveness_verified, captured_image_url
--- - credit_earned: Giờ công được ghi nhận khi duyệt
+-- 14. BẢNG ATTENDANCES (Bản ghi điểm danh thực tế tại hiện trường)
+-- ĐÃ CẬP NHẬT THEO GÓP Ý CỦA THẦY:
+-- 1. Bỏ volunteer_id (đã có trong activity_registrations)
+-- 2. Ràng buộc UNIQUE (attendance_session_id, activity_registration_id) chống spam
+-- 3. Bổ sung image_expires_at: Ảnh chụp hiện trường chỉ lưu có thời hạn (NĐ 13/2023)
 -- ==============================================================================
 CREATE TABLE attendances (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     attendance_session_id UUID NOT NULL REFERENCES attendance_sessions(id) ON DELETE CASCADE,
-    volunteer_id UUID NOT NULL REFERENCES volunteers(id) ON DELETE CASCADE,
-    activity_registration_id UUID REFERENCES activity_registrations(id) ON DELETE SET NULL,
+    activity_registration_id UUID NOT NULL REFERENCES activity_registrations(id) ON DELETE CASCADE,
     
     attended_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
@@ -182,9 +228,10 @@ CREATE TABLE attendances (
     -- Thông tin xác thực AI (Bằng chứng đối soát)
     verification_method VARCHAR(30) NOT NULL DEFAULT 'FACE_RECOGNITION'
         CHECK (verification_method IN ('FACE_RECOGNITION', 'MANUAL', 'QR_CODE')),
-    face_similarity NUMERIC(5,4),              -- Độ tương đồng Cosine (ví dụ 0.8542)
+    face_similarity NUMERIC(5,4),              -- Độ tương đồng Cosine (ví dụ: 0.8542)
     is_liveness_verified BOOLEAN DEFAULT FALSE, -- Đã qua kiểm tra Anti-spoofing chưa
     captured_image_url TEXT,                   -- Link ảnh chụp tại hiện trường lúc quét mặt
+    image_expires_at TIMESTAMPTZ,              -- Thời hạn lưu trữ ảnh điểm danh (Nghị định 13/2023)
     
     -- Trạng thái duyệt điểm danh
     status VARCHAR(30) NOT NULL DEFAULT 'PENDING'
@@ -195,11 +242,12 @@ CREATE TABLE attendances (
     reviewed_at TIMESTAMPTZ,
     note TEXT,
     
-    CONSTRAINT uq_session_volunteer UNIQUE (attendance_session_id, volunteer_id) -- Chống spam điểm danh
+    -- Ràng buộc chống điểm danh trùng 2 lần trong 1 phiên
+    CONSTRAINT uq_session_registration UNIQUE (attendance_session_id, activity_registration_id)
 );
 
 -- ==============================================================================
--- 12. BẢNG ACHIEVEMENTS & VOLUNTEER_ACHIEVEMENTS (Khen thưởng & Ghi nhận danh hiệu)
+-- 15. BẢNG ACHIEVEMENTS & VOLUNTEER_ACHIEVEMENTS (Khen thưởng & Ghi nhận danh hiệu)
 -- ==============================================================================
 CREATE TABLE achievements (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -220,7 +268,7 @@ CREATE TABLE volunteer_achievements (
 );
 
 -- ==============================================================================
--- 13. BẢNG AUDIT_LOGS (Nhật ký hệ thống để kiểm soát an ninh)
+-- 16. BẢNG AUDIT_LOGS (Nhật ký hệ thống để kiểm soát an ninh)
 -- ==============================================================================
 CREATE TABLE audit_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -235,11 +283,22 @@ CREATE TABLE audit_logs (
 );
 
 -- ==============================================================================
--- 14. CHỈ MỤC TỐI ƯU HIỆU NĂNG TRUY VẤN (INDEXES)
+-- 17. CHỈ MỤC TỐI ƯU HIỆU NĂNG TRUY VẤN (INDEXES)
 -- ==============================================================================
 CREATE INDEX idx_users_organization_id ON users(organization_id);
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
+
+CREATE INDEX idx_password_reset_tokens_user_id ON password_reset_tokens(user_id);
+CREATE INDEX idx_password_reset_tokens_token ON password_reset_tokens(token);
+
 CREATE INDEX idx_volunteers_organization_id ON volunteers(organization_id);
 CREATE INDEX idx_volunteers_user_id ON volunteers(user_id);
+
+-- Chỉ mục pgvector cho bảng khuôn mặt mẫu (sử dụng HNSW index tăng tốc tìm kiếm tương đồng cosine)
+CREATE INDEX idx_face_templates_volunteer_id ON volunteer_face_templates(volunteer_id);
+CREATE INDEX idx_face_templates_embedding ON volunteer_face_templates USING hnsw (embedding vector_cosine_ops);
+
 CREATE INDEX idx_campaigns_organization_id ON campaigns(organization_id);
 CREATE INDEX idx_campaigns_status ON campaigns(status);
 
@@ -253,7 +312,7 @@ CREATE INDEX idx_activity_registrations_volunteer_id ON activity_registrations(v
 
 CREATE INDEX idx_attendance_sessions_activity_id ON attendance_sessions(activity_id);
 CREATE INDEX idx_attendances_session_id ON attendances(attendance_session_id);
-CREATE INDEX idx_attendances_volunteer_id ON attendances(volunteer_id);
+CREATE INDEX idx_attendances_registration_id ON attendances(activity_registration_id);
 CREATE INDEX idx_attendances_status ON attendances(status);
 
 CREATE INDEX idx_volunteer_achievements_volunteer_id ON volunteer_achievements(volunteer_id);
@@ -261,7 +320,7 @@ CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
 CREATE INDEX idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
 
 -- ==============================================================================
--- 15. DỮ LIỆU KHỞI TẠO BAN ĐẦU (SEED DATA CHO ROLES)
+-- 18. DỮ LIỆU KHỞI TẠO BAN ĐẦU (SEED DATA CHO ROLES)
 -- ==============================================================================
 INSERT INTO roles (code, name, description)
 VALUES
@@ -269,4 +328,87 @@ VALUES
     ('ORGANIZATION_ADMIN', 'Organization Administrator', 'Quản trị tổ chức / Đoàn khoa'),
     ('ACTIVITY_MANAGER', 'Activity Manager', 'Ban tổ chức / Quản lý hoạt động'),
     ('VOLUNTEER', 'Volunteer', 'Đoàn viên / Tình nguyện viên')
+ON CONFLICT (code) DO NOTHING;
+
+
+-- ==============================================================================
+-- 19. DỮ LIỆU KHỞI TẠO MẪU ĐỂ TEST HỆ THỐNG (SEED DATA FOR TESTING)
+-- ==============================================================================
+
+-- 1. TỔ CHỨC ĐOÀN - HỘI (Cấu trúc cây 3 cấp)
+-- Cấp 1: Đoàn Trường
+INSERT INTO organizations (id, parent_id, code, name, description, is_active)
+VALUES 
+    ('70f78c10-ae9d-4b05-b849-86a4aa12f7ec', NULL, 'DOAN_TRUONG', 'Đoàn Trường Đại học Đồng Tháp', 'Ban Chấp hành Đoàn trường cấp cao nhất', TRUE)
+ON CONFLICT (code) DO NOTHING;
+
+-- Cấp 2: Các Đoàn Khoa trực thuộc Đoàn Trường
+INSERT INTO organizations (id, parent_id, code, name, description, is_active)
+VALUES 
+    ('ed2ef505-1eab-464a-94c5-831ef9661efa', '70f78c10-ae9d-4b05-b849-86a4aa12f7ec', 'DOAN_KHOA_CNTT', 'Đoàn Khoa Công nghệ Thông tin', 'Đoàn thanh niên Khoa Công nghệ Thông tin', TRUE),
+    ('afc2b22c-5084-4e28-af6e-c7b04a119d7f', '70f78c10-ae9d-4b05-b849-86a4aa12f7ec', 'DOAN_KHOA_KT', 'Đoàn Khoa Kinh tế', 'Đoàn thanh niên Khoa Kinh tế - Quản trị kinh doanh', TRUE),
+    ('d34eb28b-fc01-4bc8-8179-4714a0931d1e', '70f78c10-ae9d-4b05-b849-86a4aa12f7ec', 'DOAN_KHOA_SP', 'Đoàn Khoa Sư phạm', 'Đoàn thanh niên khối ngành Sư phạm', TRUE)
+ON CONFLICT (code) DO NOTHING;
+
+-- Cấp 3: Các CLB / Đội trực thuộc Khoa và Trường
+INSERT INTO organizations (id, parent_id, code, name, description, is_active)
+VALUES 
+    ('f7145898-a95a-4817-9660-21cecb8e4e35', 'ed2ef505-1eab-464a-94c5-831ef9661efa', 'CLB_TN_XANH_CNTT', 'CLB Tình Nguyện Xanh CNTT', 'Đội chuyên trách hoạt động tình nguyện khoa CNTT', TRUE),
+    ('95351f72-7f30-45a3-91a3-a7f105c34ce2', 'ed2ef505-1eab-464a-94c5-831ef9661efa', 'DOI_TIN_HOC_TRE', 'Đội Tin học Trẻ Tình nguyện', 'Hỗ trợ chuyển đổi số và tin học cộng đồng', TRUE),
+    ('cba093c4-d33f-44db-90a1-d0de7db6e258', '70f78c10-ae9d-4b05-b849-86a4aa12f7ec', 'CLB_HMTN_TRUONG', 'CLB Hiến Máu Tình Nguyện Trường', 'Câu lạc bộ hiến máu cứu người cấp trường', TRUE)
+ON CONFLICT (code) DO NOTHING;
+
+-- 2. TÀI KHOẢN MẪU (USERS) ĐỂ TEST ĐĂNG NHẬP & PHÂN QUYỀN
+-- Mật khẩu mặc định cho tất cả tài khoản test: "Admin123@"
+-- Hash BCrypt: $2a$11$qR0qZc3U1aU6gq9gK9s2mOcS4Gv2j1kL3q5t6u7v8w9x0y1z2a3b4
+INSERT INTO users (id, organization_id, username, email, password_hash, is_active)
+VALUES
+    ('11111111-1111-1111-1111-111111111111', '70f78c10-ae9d-4b05-b849-86a4aa12f7ec', 'superadmin', 'superadmin@dthu.edu.vn', '$2a$11$0jS/Wc9r8kK6rL4jC5y2e.8q5t3v1m7o9p2r4t6v8x0z2a4b6c8e.', TRUE),
+    ('22222222-2222-2222-2222-222222222222', 'ed2ef505-1eab-464a-94c5-831ef9661efa', 'admin_cntt', 'admin.cntt@dthu.edu.vn', '$2a$11$0jS/Wc9r8kK6rL4jC5y2e.8q5t3v1m7o9p2r4t6v8x0z2a4b6c8e.', TRUE),
+    ('33333333-3333-3333-3333-333333333333', 'ed2ef505-1eab-464a-94c5-831ef9661efa', 'volunteer_trong', 'trong.volunteer@dthu.edu.vn', '$2a$11$0jS/Wc9r8kK6rL4jC5y2e.8q5t3v1m7o9p2r4t6v8x0z2a4b6c8e.', TRUE)
+ON CONFLICT (username) DO NOTHING;
+
+-- 3. GÁN QUYỀN CHO CÁC TÀI KHOẢN MẪU (USER_ROLES)
+INSERT INTO user_roles (user_id, role_id)
+SELECT '11111111-1111-1111-1111-111111111111', id FROM roles WHERE code = 'SUPER_ADMIN'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_roles (user_id, role_id)
+SELECT '22222222-2222-2222-2222-222222222222', id FROM roles WHERE code = 'ORGANIZATION_ADMIN'
+ON CONFLICT DO NOTHING;
+
+INSERT INTO user_roles (user_id, role_id)
+SELECT '33333333-3333-3333-3333-333333333333', id FROM roles WHERE code = 'VOLUNTEER'
+ON CONFLICT DO NOTHING;
+
+-- 4. HỒ SƠ TÌNH NGUYỆN VIÊN MẪU (VOLUNTEERS)
+INSERT INTO volunteers (
+    id, user_id, organization_id, volunteer_code, full_name, 
+    date_of_birth, gender, phone, student_code, class_name, 
+    joined_at, is_active, consent_face_auth, consent_given_at
+)
+VALUES (
+    '44444444-4444-4444-4444-444444444444',
+    '33333333-3333-3333-3333-333333333333',
+    'ed2ef505-1eab-464a-94c5-831ef9661efa',
+    'TNV-2026-0001',
+    'Lê Minh Trọng',
+    '2004-05-15',
+    'MALE',
+    '0912345678',
+    '0023413651',
+    'ĐHCNTT23A-CS',
+    '2023-09-05',
+    TRUE,
+    TRUE,
+    CURRENT_TIMESTAMP
+)
+ON CONFLICT (volunteer_code) DO NOTHING;
+
+-- 5. DANH MỤC KHEN THƯỞNG / DANH HIỆU MẪU (ACHIEVEMENTS)
+INSERT INTO achievements (id, code, name, description)
+VALUES 
+    ('55555555-5555-5555-5555-555555555551', 'TNV_XUAT_SAC', 'Tình nguyện viên Xuất sắc', 'Hoàn thành trên 50 giờ tình nguyện và tham gia tích cực các chiến dịch lớn'),
+    ('55555555-5555-5555-5555-555555555552', 'DONG_MAU_CUU_NGUOI', 'Giọt Máu Nghĩa Tình', 'Tham gia hiến máu tình nguyện từ 3 lần trở lên trong năm học'),
+    ('55555555-5555-5555-5555-555555555553', 'MUA_HE_XANH_TIEU_BIEU', 'Chiến sĩ Mùa Hè Xanh Tiêu Biểu', 'Đóng góp xuất sắc trong chiến dịch Mùa Hè Xanh cấp Trường')
 ON CONFLICT (code) DO NOTHING;

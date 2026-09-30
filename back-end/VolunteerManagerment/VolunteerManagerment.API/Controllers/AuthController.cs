@@ -1,10 +1,13 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VolunteerManagerment.Application.Features.Auth.Commands.ChangePassword;
+using VolunteerManagerment.Application.Features.Auth.Commands.ForgotPassword;
 using VolunteerManagerment.Application.Features.Auth.Commands.Login;
 using VolunteerManagerment.Application.Features.Auth.Commands.Logout;
 using VolunteerManagerment.Application.Features.Auth.Commands.RefreshTokens;
 using VolunteerManagerment.Application.Features.Auth.Commands.Register;
+using VolunteerManagerment.Application.Features.Auth.Commands.ResetPassword;
 using VolunteerManagerment.Application.Features.Auth.Query.GetMe;
 
 namespace VolunteerManagerment.API.Controllers;
@@ -45,9 +48,33 @@ public class AuthController(ISender sender) : ControllerBase
 
     [HttpGet("me")]
     [Authorize]
-    public async Task<IActionResult> GetMe([FromQuery] GetMeQuery query, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetMe(GetMeQuery query, CancellationToken cancellationToken)
     {
         var result = await sender.Send(query, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommand command, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(command, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(command, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand command, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(command, cancellationToken);
         return Ok(result);
     }
 }
