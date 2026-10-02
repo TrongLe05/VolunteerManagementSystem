@@ -37,7 +37,7 @@ public class ResetPasswordCommandHandler(
         user.PasswordHash = passwordHasher.HashPassword(request.NewPassword);
         userRepository.Update(user);
 
-        var activeRefreshTokens = await refreshTokenRepository.FindAsync(rt => rt.UserId == user.Id, cancellationToken);
+        var activeRefreshTokens = await refreshTokenRepository.FindAsync(rt => rt.UserId == user.Id && !rt.IsRevoked, cancellationToken);
         foreach (var refreshToken in activeRefreshTokens)
         {
             refreshToken.IsRevoked = true;
@@ -45,7 +45,7 @@ public class ResetPasswordCommandHandler(
             refreshTokenRepository.Update(refreshToken);
         }
 
-        await unitOfWork.SaveChangeAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }

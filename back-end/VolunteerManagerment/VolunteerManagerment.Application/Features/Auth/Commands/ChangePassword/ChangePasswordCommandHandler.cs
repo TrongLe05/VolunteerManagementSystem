@@ -21,7 +21,7 @@ public class ChangePasswordCommandHandler(
         var user = await userRepository.GetByIdAsync(userId, cancellationToken)
             ?? throw new InvalidOperationException("Người dùng không tồn tại trong hệ thống");
 
-        var isCurrentPasswordValid = passwordHasher.VerifyPassword(user.PasswordHash, request.CurrentPassword);
+        var isCurrentPasswordValid = passwordHasher.VerifyPassword(request.CurrentPassword, user.PasswordHash);
         if (!isCurrentPasswordValid)
             throw new InvalidOperationException("Mật khẩu hiện tại không chính xác");
 
@@ -36,7 +36,7 @@ public class ChangePasswordCommandHandler(
             refreshTokenRepository.Update(token);
         }
 
-        await unitOfWork.SaveChangeAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
         return true;
     }
 }

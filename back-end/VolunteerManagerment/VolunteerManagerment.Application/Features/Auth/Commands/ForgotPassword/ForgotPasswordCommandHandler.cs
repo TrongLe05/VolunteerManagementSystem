@@ -29,7 +29,7 @@ public class ForgotPasswordCommandHandler(
         };
 
         await passwordResetTokenRepository.AddAsync(passwordResetToken, cancellationToken);
-        await unitOfWork.SaveChangeAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         try
         {

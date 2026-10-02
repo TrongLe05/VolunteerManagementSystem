@@ -50,7 +50,7 @@ public class RefreshTokenCommandHandler(
 
         await refreshTokenRepository.AddAsync(newRefreshTokenEntity, cancellationToken);
 
-        await unitOfWork.SaveChangeAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new RefreshTokenResponseDto(
             AccessToken: newAccessToken,

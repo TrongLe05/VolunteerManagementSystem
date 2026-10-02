@@ -21,7 +21,7 @@ public class LogoutCommandHandler(
         token.RevokedAt = DateTimeOffset.UtcNow;
         refreshTokenRepository.Update(token);
 
-        await unitOfWork.SaveChangeAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;
     }
