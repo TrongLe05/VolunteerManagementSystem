@@ -15,6 +15,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<Volunteer> Volunteers => Set<Volunteer>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -54,6 +55,20 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                   .WithMany()
                   .HasForeignKey(rt => rt.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Volunteer>(entity =>
+        {
+            entity.ToTable("volunteers");
+            entity.HasIndex(v => v.VolunteerCode).IsUnique();
+            entity.HasOne(v => v.User)
+                .WithOne()
+                .HasForeignKey<Volunteer>(v => v.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(v => v.Organization)
+                .WithMany()
+                .HasForeignKey(v => v.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Organization>().ToTable("organizations");

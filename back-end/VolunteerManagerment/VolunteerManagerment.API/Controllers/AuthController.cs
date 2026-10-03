@@ -50,7 +50,7 @@ public class AuthController(ISender sender) : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetMe(CancellationToken cancellationToken)
     {
-        var result = await sender.Send(cancellationToken);
+        var result = await sender.Send(new GetMeQuery(), cancellationToken);
         return Ok(result);
     }
 
