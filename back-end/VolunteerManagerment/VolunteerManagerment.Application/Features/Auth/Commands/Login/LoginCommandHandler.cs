@@ -49,7 +49,7 @@ public sealed class LoginCommandHandler(
         //await unitOfWork.SaveChangeAsync(cancellationToken);
         try
         {
-            await unitOfWork.SaveChangeAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
         catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
         {

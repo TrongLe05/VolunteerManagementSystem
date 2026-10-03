@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Resend;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 using VolunteerManagerment.Infrastructure.Authentication;
@@ -33,6 +34,10 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        
+        services.AddScoped<IOrganizationRepository, OrganizationRepository>();  
+
+        services.AddScoped<IVolunteerRepository, VolunteerRepository>();
 
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
@@ -40,6 +45,14 @@ public static class DependencyInjection
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+        services.AddHttpClient<IResend, ResendClient>();
+        services.AddOptions<ResendClientOptions>().Configure(options =>
+        {
+            options.ApiToken = configuration["Resend:ApiKey"] ?? string.Empty;
+        });
+
+        services.AddTransient<IEmailService, ResendEmailService>();
 
         return services;
     }

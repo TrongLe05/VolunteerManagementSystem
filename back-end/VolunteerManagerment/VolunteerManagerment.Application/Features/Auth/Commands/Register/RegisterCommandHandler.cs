@@ -42,7 +42,7 @@ public class RegisterCommandHandler(
 
         await userRepository.AddAsync(newUser, cancellationToken);
 
-        await unitOfWork.SaveChangeAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new RegisterResponseDto(
             newUser.Id,
