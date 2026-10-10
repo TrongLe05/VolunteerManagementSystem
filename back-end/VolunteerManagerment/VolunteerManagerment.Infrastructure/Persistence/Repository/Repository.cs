@@ -23,6 +23,10 @@ public class Repository<T>(ApplicationDbContext context) : IRepository<T> where 
     {
         return await _dbSet.AsNoTracking().Where(predicate).ToListAsync(cancellationToken);
     }
+    public virtual async Task AddRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
+    {
+        await _dbSet.AddRangeAsync(entities, cancellationToken);   
+    }
 
     public virtual async Task AddAsync(T entity, CancellationToken cancellationToken = default)
     {
@@ -38,4 +42,5 @@ public class Repository<T>(ApplicationDbContext context) : IRepository<T> where 
     {
         _dbSet.Remove(entity);
     }
+
 }

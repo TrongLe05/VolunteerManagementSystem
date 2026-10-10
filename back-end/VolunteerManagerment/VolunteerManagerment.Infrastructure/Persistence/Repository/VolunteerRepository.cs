@@ -11,6 +11,11 @@ public class VolunteerRepository(ApplicationDbContext context) : Repository<Volu
         return _dbSet.Include(v => v.Organization).FirstOrDefaultAsync(v => v.UserId == userId, cancellationToken);
     }
 
+    public Task<List<string>> GetExistingStudentCodesAsync(IEnumerable<string> studentCodes, CancellationToken cancellationToken = default)
+    {
+        return _dbSet.Where(v => v.StudentCode != null && studentCodes.Contains(v.StudentCode)).Select(v => v.StudentCode!).ToListAsync(cancellationToken);
+    }
+
     public Task<bool> IsStudentCodeExistsAsync(string studentCode, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
         return _dbSet.AnyAsync(v => v.StudentCode == studentCode && (!excludeId.HasValue || v.Id != excludeId.Value), cancellationToken);

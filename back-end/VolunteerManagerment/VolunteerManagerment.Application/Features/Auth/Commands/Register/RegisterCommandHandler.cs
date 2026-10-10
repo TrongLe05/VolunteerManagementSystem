@@ -9,6 +9,7 @@ namespace VolunteerManagerment.Application.Features.Auth.Commands.Register;
 public class RegisterCommandHandler(
     IUserRepository userRepository,
     IRepository<Role> roleRepository,
+    IVolunteerRepository volunteerRepository,
     IUnitOfWork unitOfWork
 ) : IRequestHandler<RegisterCommand, RegisterResponseDto>
 {
@@ -40,8 +41,20 @@ public class RegisterCommandHandler(
             }
         };
 
-        await userRepository.AddAsync(newUser, cancellationToken);
+        var newVolunteer = new Volunteer
+        {
+            Id = Guid.NewGuid(),
+            UserId = newUser.Id,
+            FullName = newUser.Username,
+            OrganizationId = newUser.OrganizationId,
+            VolunteerCode = $"TNV-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString()[..6].ToUpper()}",
+            CreatedAt = DateTimeOffset.UtcNow,
+            IsActive = true,
+            ConsentFaceAuth = false,
+        };
 
+        await userRepository.AddAsync(newUser, cancellationToken);
+        await volunteerRepository.AddAsync(newVolunteer, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new RegisterResponseDto(

@@ -54,6 +54,8 @@ public static class DependencyInjection
 
         services.AddTransient<IEmailService, ResendEmailService>();
 
+        services.AddScoped<IExcelService, MiniExcelService>();
+
         return services;
     }
 }
