@@ -10,5 +10,6 @@ public interface IApplicationDbContext
     DbSet<Role> Roles { get; }
     DbSet<UserRole> UserRoles { get; }
     DbSet<Volunteer> Volunteers { get; }
+    DbSet<Campaign> Campaigns { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -16,6 +16,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<Volunteer> Volunteers => Set<Volunteer>();
+    public DbSet<Campaign> Campaigns => Set<Campaign>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -69,6 +70,22 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 .WithMany()
                 .HasForeignKey(v => v.OrganizationId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Campaign>(entity =>
+        {
+            entity.ToTable("campaigns");
+            entity.Property(c => c.Name).HasMaxLength(255).IsRequired();
+            entity.Property(c => c.Status).HasMaxLength(30).IsRequired().HasDefaultValue("DRAFT");
+            entity.Property(c => c.Description).IsRequired(false);
+            entity.HasOne(c => c.Organization)
+                .WithMany(o => o.Campaigns)
+                .HasForeignKey(c => c.OrganizationId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(c => c.Creator)
+                .WithMany(u => u.Campaigns)
+                .HasForeignKey(c => c.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Organization>().ToTable("organizations");
