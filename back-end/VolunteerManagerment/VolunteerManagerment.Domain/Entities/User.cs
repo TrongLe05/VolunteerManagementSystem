@@ -17,4 +17,5 @@ public class User : BaseEntity, IAuditableEntity
     public Organization Organization { get; set; } = null!;
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public ICollection<Campaign> Campaigns { get; set; } = new List<Campaign>();
 }
