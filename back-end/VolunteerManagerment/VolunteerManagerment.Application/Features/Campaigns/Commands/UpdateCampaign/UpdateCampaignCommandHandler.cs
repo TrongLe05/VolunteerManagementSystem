@@ -41,6 +41,9 @@ public class UpdateCampaignCommandHandler(
             throw new UnauthorizedAccessException("Người dùng không có quyền cập nhật chiến dịch.");
         }
 
+        if (campaign.Status is "COMPLETED" or "CANCELLED")
+            throw new InvalidOperationException("Không thể cập nhật chiến dịch đã kết thúc hoặc đã hủy.");
+
         campaign.Name = request.Name;
         campaign.Description = request.Description?.Trim();
         campaign.StartDate = request.StartDate;
