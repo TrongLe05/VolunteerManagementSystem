@@ -15,6 +15,6 @@ public class UpdateCampaignCommandValidator : AbstractValidator<UpdateCampaignCo
             .GreaterThanOrEqualTo(x => x.StartDate).WithMessage("Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.");
         RuleFor(x => x.Status)
             .NotEmpty().WithMessage("Trạng thái chiến dịch không được rỗng.")
-            .Must(status => status == "DRAFT" || status == "PUBLISHED" || status == "COMPLETED" || status == "CANCELLED").WithMessage("Trạng thái chiến dịch phải là \"DRAFT\", \"PUBLISHED\", \"COMPLETED\" hoặc \"CANCELLED\".");
+            .Must(status => status == "DRAFT" || status == "UPCOMING" || status == "ONGOING" || status == "COMPLETED" || status == "CANCELLED").WithMessage("Trạng thái chiến dịch phải là \"DRAFT\", \"UPCOMING\", \"ONGOING\", \"COMPLETED\" hoặc \"CANCELLED\".");
     }
 }

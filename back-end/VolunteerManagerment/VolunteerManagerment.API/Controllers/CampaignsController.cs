@@ -15,10 +15,11 @@ namespace VolunteerManagerment.API.Controllers;
 public class CampaignsController(ISender sender) : ControllerBase
 {
     [HttpPost]
+    [Authorize(Roles = "SUPER_ADMIN, ORGANIZATION_ADMIN")]
     public async Task<IActionResult> CreateCampaign([FromBody] CreateCampaignCommand command, CancellationToken cancellationToken)
     {
         var campaignId = await sender.Send(command, cancellationToken);
-        return Ok(campaignId);
+        return CreatedAtAction(nameof(GetCampaignById), new { id = campaignId }, campaignId);
     }
 
     [HttpGet]
