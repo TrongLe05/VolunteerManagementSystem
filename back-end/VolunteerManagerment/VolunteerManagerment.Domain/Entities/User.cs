@@ -15,7 +15,7 @@ public class User : BaseEntity, IAuditableEntity
 
     // Navigation properties
     public Organization Organization { get; set; } = null!;
-    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
-    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
-    public ICollection<Campaign> Campaigns { get; set; } = new List<Campaign>();
+    public ICollection<UserRole> UserRoles { get; set; } = [];
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = [];
+    public ICollection<Campaign> Campaigns { get; set; } = [];
 }

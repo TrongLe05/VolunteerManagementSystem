@@ -21,8 +21,11 @@ public class CreateCampaignCommandHandler(
             ?? throw new UnauthorizedAccessException("Người dùng không tồn tại.");
 
         var roles = user.UserRoles.Select(r => r.Role.Code).ToList();
-
-        if (roles.Contains("ORGANIZATION_ADMIN"))
+        if (roles.Contains("SUPER_ADMIN"))
+        {
+            // SUPER_ADMIN can create campaigns for any organization
+        }
+        else if (roles.Contains("ORGANIZATION_ADMIN"))
         {
             var allowedOrgs = await organizationRepository.GetSubOrganizationIdsAsync(user.OrganizationId, cancellationToken);
             if(!allowedOrgs.Contains(request.OrganizationId))
@@ -30,7 +33,7 @@ public class CreateCampaignCommandHandler(
                 throw new UnauthorizedAccessException("Bạn không có quyền tạo chiến dịch cho tổ chức này.");
             }
         }
-        else if (!roles.Contains("SUPER_ADMIN"))
+        else
         {
             throw new UnauthorizedAccessException("Bạn không có quyền tạo chiến dịch.");
         }

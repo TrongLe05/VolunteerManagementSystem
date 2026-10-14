@@ -21,7 +21,7 @@ namespace VolunteerManagerment.API.Controllers
             return Ok(result);
         }
 
-        [HttpPut]
+        [HttpPut("me")]
         public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateMyProfileCommand command, CancellationToken cancellationToken)
         {
             var result = await sender.Send(command, cancellationToken);
