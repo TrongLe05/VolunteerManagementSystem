@@ -17,5 +17,5 @@ public class Campaign : BaseEntity, IAuditableEntity
     // navigation properties
     public Organization Organization { get; set; } = null!;
     public User Creator { get; set; } = null!;
-    //public ICollection<Activity> Activity { get; set; } = new List<Activity>();
+    public ICollection<Activity> Activities { get; set; } = [];
 }

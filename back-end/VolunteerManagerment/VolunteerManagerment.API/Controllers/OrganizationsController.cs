@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using VolunteerManagerment.Application.Features.Organizations.Commands.CreateOrganization;
 using VolunteerManagerment.Application.Features.Organizations.Commands.DeleteOrganization;
 using VolunteerManagerment.Application.Features.Organizations.Commands.UpdateOrganization;
+using VolunteerManagerment.Application.Features.Organizations.Queries.GetOrganizationById;
 using VolunteerManagerment.Application.Features.Organizations.Queries.GetOrganizations;
 
 namespace VolunteerManagerment.API.Controllers;
@@ -20,8 +21,16 @@ public class OrganizationsController(ISender sender) : ControllerBase
         return Ok(organizations);
     }
 
+    [HttpGet("{id}")]
+    [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN")]
+    public async Task<IActionResult> GetOrganizationById([FromRoute] Guid id, CancellationToken cancellationToken)
+    {
+        var organization = await sender.Send(new GetOrganizationByIdQuery(id), cancellationToken);
+        return Ok(organization);
+    }
+
     [HttpPost]
-    [Authorize]
+    [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN")]
     public async Task<IActionResult> CreateOrganization([FromBody] CreateOrganizationCommand command, CancellationToken cancellationToken)
     {
         var result = await sender.Send(command, cancellationToken);
@@ -29,7 +38,7 @@ public class OrganizationsController(ISender sender) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize]
+    [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN")]
     public async Task<IActionResult> UpdateOrganization([FromRoute] Guid id, [FromBody] UpdateOrganizationCommand command, CancellationToken cancellationToken)
     {
         if (id != command.Id)
@@ -40,7 +49,7 @@ public class OrganizationsController(ISender sender) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize]
+    [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN")]
     public async Task<IActionResult> DeleteOrganization([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new DeleteOrganizationCommand(id), cancellationToken);

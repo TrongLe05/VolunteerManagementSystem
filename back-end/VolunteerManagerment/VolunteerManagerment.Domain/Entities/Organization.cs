@@ -14,7 +14,7 @@ public class Organization : BaseEntity, IAuditableEntity
 
     // Navigation properties
     public Organization? Parent { get; set; }
-    public ICollection<Organization> Children { get; set; } = new List<Organization>();
-    public ICollection<Campaign> Campaigns { get; set; } = new List<Campaign>();
-    public ICollection<User> Users { get; set; } = new List<User>();
+    public ICollection<Organization> Children { get; set; } = [];
+    public ICollection<Campaign> Campaigns { get; set; } = [];
+    public ICollection<User> Users { get; set; } = [];
 }
