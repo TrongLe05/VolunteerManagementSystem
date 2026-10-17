@@ -11,5 +11,7 @@ public interface IApplicationDbContext
     DbSet<UserRole> UserRoles { get; }
     DbSet<Volunteer> Volunteers { get; }
     DbSet<Campaign> Campaigns { get; }
+    DbSet<Activity> Activities { get; }
+    DbSet<ActivityLocation> ActivityLocations { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
