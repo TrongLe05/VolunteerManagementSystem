@@ -41,6 +41,8 @@ public static class DependencyInjection
 
         services.AddScoped<ICampaignRepository, CampaignRepository>();
 
+        services.AddScoped<IActivityRepository, ActivityRepository>();
+
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();

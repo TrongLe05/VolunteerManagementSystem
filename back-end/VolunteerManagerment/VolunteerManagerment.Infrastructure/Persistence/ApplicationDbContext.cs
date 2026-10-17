@@ -17,7 +17,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<Volunteer> Volunteers => Set<Volunteer>();
     public DbSet<Campaign> Campaigns => Set<Campaign>();
-
+    public DbSet<Activity> Activities => Set<Activity>();
+    public DbSet<ActivityLocation> ActivityLocations => Set<ActivityLocation>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -86,6 +87,36 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 .WithMany(u => u.Campaigns)
                 .HasForeignKey(c => c.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Activity>(entity =>
+        {
+            entity.ToTable("activities");
+            entity.Property(a => a.Name).HasMaxLength(255).IsRequired();
+            entity.Property(a => a.Status).HasMaxLength(30).IsRequired().HasDefaultValue("DRAFT");
+            entity.Property(a => a.CreditHours).HasPrecision(4, 2);
+            entity.Property(a => a.CreditDays).HasPrecision(3, 1);
+            entity.HasOne(a => a.Campaign)
+                .WithMany(c => c.Activities)
+                .HasForeignKey(a => a.CampaignId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(a => a.Creator)
+                .WithMany()
+                .HasForeignKey(a => a.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ActivityLocation>(entity =>
+        {
+            entity.ToTable("activity_locations");
+            entity.Property(al => al.Name).HasMaxLength(255).IsRequired();
+            entity.Property(al => al.Latitude).HasPrecision(10, 7);
+            entity.Property(al => al.Longitude).HasPrecision(10, 7);
+            entity.Property(al => al.AllowedRadiusMeters).HasPrecision(10, 2).HasDefaultValue(100.0m);
+            entity.HasOne(al => al.Activity)
+                .WithMany(a => a.Locations)
+                .HasForeignKey(al => al.ActivityId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Organization>().ToTable("organizations");
