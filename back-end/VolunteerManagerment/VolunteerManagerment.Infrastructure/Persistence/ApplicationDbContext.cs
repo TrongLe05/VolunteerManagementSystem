@@ -19,6 +19,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Campaign> Campaigns => Set<Campaign>();
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<ActivityLocation> ActivityLocations => Set<ActivityLocation>();
+    public DbSet<ActivityRegistration> ActivityRegistrations => Set<ActivityRegistration>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -117,6 +118,25 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 .WithMany(a => a.Locations)
                 .HasForeignKey(al => al.ActivityId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ActivityRegistration>(entity =>
+        {
+            entity.ToTable("activity_registrations");
+            entity.Property(ar => ar.Status).HasMaxLength(30).IsRequired().HasDefaultValue("REGISTERED");
+            entity.HasIndex(ar => new { ar.ActivityId, ar.VolunteerId }).IsUnique();
+            entity.HasOne(ar => ar.Activity)
+                .WithMany(a => a.Registrations)
+                .HasForeignKey(ar => ar.ActivityId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(ar => ar.Volunteer)
+                .WithMany(v => v.Registrations)
+                .HasForeignKey(ar => ar.VolunteerId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(ar => ar.Approved)
+                .WithMany()
+                .HasForeignKey(ar => ar.ApprovedBy)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Organization>().ToTable("organizations");

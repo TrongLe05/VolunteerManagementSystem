@@ -23,4 +23,5 @@ public class Volunteer : BaseEntity, IAuditableEntity
     // Navigation properties
     public User? User { get; set; }
     public Organization Organization { get; set; } = null!;
+    public ICollection<ActivityRegistration> Registrations { get; set; } = [];
 }

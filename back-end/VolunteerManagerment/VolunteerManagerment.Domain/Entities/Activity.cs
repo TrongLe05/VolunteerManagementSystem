@@ -21,4 +21,5 @@ public class Activity : BaseEntity, IAuditableEntity
     public Campaign Campaign { get; set; } = null!;
     public User Creator { get; set; } = null!;
     public ICollection<ActivityLocation> Locations { get; set; } = [];
+    public ICollection<ActivityRegistration> Registrations { get; set; } = [];
 }
