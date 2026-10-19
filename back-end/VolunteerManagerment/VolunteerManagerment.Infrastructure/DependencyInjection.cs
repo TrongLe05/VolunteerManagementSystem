@@ -42,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<ICampaignRepository, CampaignRepository>();
 
         services.AddScoped<IActivityRepository, ActivityRepository>();
+        services.AddScoped<IActivityRegistrationRepository, ActivityRegistrationRepository>();
 
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 

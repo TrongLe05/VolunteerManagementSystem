@@ -13,5 +13,6 @@ public interface IApplicationDbContext
     DbSet<Campaign> Campaigns { get; }
     DbSet<Activity> Activities { get; }
     DbSet<ActivityLocation> ActivityLocations { get; }
+    DbSet<ActivityRegistration> ActivityRegistrations { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
