@@ -23,13 +23,13 @@ public class GetCampaignsQueryHandler(
 
         var roles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
         List<Guid>? allowedOrgs = null;
-        if (roles.Contains("ORGANIZATION_ADMIN"))
-        {
-            allowedOrgs = await organizationRepository.GetSubOrganizationIdsAsync(user.OrganizationId, cancellationToken);
-        }
-        else if (roles.Contains("SUPER_ADMIN") || roles.Contains("VOLUNTEER"))
+        if (roles.Contains("SUPER_ADMIN") || roles.Contains("VOLUNTEER"))
         {
             allowedOrgs = null;
+        }
+        else if (roles.Contains("ORGANIZATION_ADMIN"))
+        {
+            allowedOrgs = await organizationRepository.GetSubOrganizationIdsAsync(user.OrganizationId, cancellationToken);
         }
         else
         {

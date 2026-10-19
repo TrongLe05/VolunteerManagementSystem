@@ -15,7 +15,7 @@ namespace VolunteerManagerment.API.Controllers;
 public class CampaignsController(ISender sender) : ControllerBase
 {
     [HttpPost]
-    [Authorize(Roles = "SUPER_ADMIN, ORGANIZATION_ADMIN")]
+    [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN")]
     public async Task<IActionResult> CreateCampaign([FromBody] CreateCampaignCommand command, CancellationToken cancellationToken)
     {
         var campaignId = await sender.Send(command, cancellationToken);
@@ -30,7 +30,7 @@ public class CampaignsController(ISender sender) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize(Roles = "SUPER_ADMIN, ORGANIZATION_ADMIN, VOLUNTEER")]
+    [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN,VOLUNTEER")]
     public async Task<IActionResult> GetCampaignById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetCampaignByIdQuery(id), cancellationToken);
@@ -38,7 +38,7 @@ public class CampaignsController(ISender sender) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "SUPER_ADMIN, ORGANIZATION_ADMIN")]
+    [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN")]
     public async Task<IActionResult> UpdateCampaign([FromRoute] Guid id, [FromBody] UpdateCampaignCommand command, CancellationToken cancellationToken)
     {
         if (id != command.Id)
@@ -49,7 +49,7 @@ public class CampaignsController(ISender sender) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "SUPER_ADMIN, ORGANIZATION_ADMIN")]
+    [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN")]
     public async Task<IActionResult> DeleteCampaign([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new DeleteCampaignCommand(id), cancellationToken);

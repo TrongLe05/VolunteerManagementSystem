@@ -24,7 +24,7 @@ public class UpdateMyProfileCommandHandler(
         volunteer.DateOfBirth = request.DateOfBirth;
         volunteer.ClassName = request.ClassName;
 
-        if (string.IsNullOrEmpty(volunteer.StudentCode) && !string.IsNullOrEmpty(request.StudentCode))
+        if (!string.IsNullOrEmpty(request.StudentCode))
         {
             var isStudentCodeExists = await volunteerRepository.IsStudentCodeExistsAsync(request.StudentCode, volunteer.Id, cancellationToken);
             if (isStudentCodeExists)
@@ -33,7 +33,7 @@ public class UpdateMyProfileCommandHandler(
             }
             volunteer.StudentCode = request.StudentCode;
         }
-        volunteer.StudentCode = request.StudentCode;
+        volunteer.StudentCode = request.StudentCode?.Trim();
 
         if (request.ConsentFaceAuth && !volunteer.ConsentFaceAuth)
         {

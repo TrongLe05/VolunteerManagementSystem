@@ -16,7 +16,7 @@ public class RegisterActivityCommandHandler(
 {
     public async Task<Guid> Handle(RegisterActivityCommand request, CancellationToken cancellationToken)
     {
-        var userId = currentUserService.UserId 
+        var userId = currentUserService.UserId
             ?? throw new UnauthorizedAccessException("Không xác định được người dùng.");
 
         var volunteer = await volunteerRepository.GetByUserIdAsync(userId, cancellationToken)
@@ -28,7 +28,7 @@ public class RegisterActivityCommandHandler(
         var activity = await activityRepository.GetByIdWithDetailsAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException("Không tìm thấy hoạt động.");
 
-        if (activity.Status != "OPEN") 
+        if (activity.Status != "OPEN")
             throw new InvalidOperationException("Hoạt động hiện không mở đăng ký.");
 
         if (DateTimeOffset.UtcNow > activity.EndTime)
@@ -39,6 +39,17 @@ public class RegisterActivityCommandHandler(
         if (!allowedOrgs.Contains(volunteer.OrganizationId))
             throw new UnauthorizedAccessException("Bạn không có quyền đăng ký hoạt động này.");
 
+
+        var exitingRegistration = await activityRegistrationRepository.GetByActivityAndVolunteerAsync(activity.Id, volunteer.Id, cancellationToken);
+        if (exitingRegistration != null)
+        {
+            if (exitingRegistration.Status is "REGISTERED" or "APPROVED")
+                throw new InvalidOperationException("Bạn đã đăng ký hoạt động này rồi.");
+
+            if (exitingRegistration.Status is "REJECTED")
+                throw new InvalidOperationException("Đơn đăng ký của bạn cho hoạt động này đã bị từ chối đăng ký hoạt động này.");
+        }
+
         int capacity = 0;
         if (activity.Capacity.HasValue)
         {
@@ -47,24 +58,12 @@ public class RegisterActivityCommandHandler(
                 throw new InvalidOperationException("Hoạt động đã đạt giới hạn số lượng đăng ký.");
         }
 
-        var exitingRegistration = await activityRegistrationRepository.GetByActivityAndVolunteerAsync(activity.Id, volunteer.Id, cancellationToken);
-        if (exitingRegistration != null)
+        if (exitingRegistration is { Status: "CANCELLED" })
         {
-            if (exitingRegistration.Status is "REGISTERED" or "APPROVED")
-            {
-                throw new InvalidOperationException("Bạn đã đăng ký hoạt động này rồi.");
-
-            }
-            else if (exitingRegistration.Status == "REJECTED")
-            {
-                throw new InvalidOperationException("Đơn đăng ký của bạn cho hoạt động này đã bị từ chối đăng ký hoạt động này.");
-            } else if (exitingRegistration.Status == "CANCELLED")
-            {
-                exitingRegistration.Status = "REGISTERED";
-                exitingRegistration.RegisteredAt = DateTimeOffset.UtcNow;
-                await unitOfWork.SaveChangesAsync(cancellationToken);
-                return exitingRegistration.Id;
-            }
+            exitingRegistration.Status = "REGISTERED";
+            exitingRegistration.RegisteredAt = DateTimeOffset.UtcNow;
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return exitingRegistration.Id;
         }
 
         var newRegister = new ActivityRegistration

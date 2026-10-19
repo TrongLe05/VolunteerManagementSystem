@@ -25,14 +25,13 @@ public class GetActivitiesQueryHandler(
         var roles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
 
         List<Guid>? allowOrgs = null;
-
-        if (roles.Contains("ORGANIZATION_ADMIN"))
-        {
-            allowOrgs = await organizationRepository.GetSubOrganizationIdsAsync(user.OrganizationId, cancellationToken);
-        } 
-        else if (roles.Contains("SUPER_ADMIN") || roles.Contains("VOLUNTEER"))
+        if (roles.Contains("SUPER_ADMIN") || roles.Contains("VOLUNTEER"))
         {
             allowOrgs = null;
+        }
+        else if (roles.Contains("ORGANIZATION_ADMIN"))
+        {
+            allowOrgs = await organizationRepository.GetSubOrganizationIdsAsync(user.OrganizationId, cancellationToken);
         }
         else
         {
@@ -55,7 +54,7 @@ public class GetActivitiesQueryHandler(
             query = query.Where(a => a.Status != "DRAFT");
         }
 
-        if(request.CampaignId.HasValue)
+        if (request.CampaignId.HasValue)
         {
             query = query.Where(a => a.CampaignId == request.CampaignId.Value);
         }
