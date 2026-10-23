@@ -14,5 +14,7 @@ public interface IApplicationDbContext
     DbSet<Activity> Activities { get; }
     DbSet<ActivityLocation> ActivityLocations { get; }
     DbSet<ActivityRegistration> ActivityRegistrations { get; }
+    DbSet<AttendanceSession> AttendanceSessions { get; }
+    DbSet<Attendance> Attendances { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

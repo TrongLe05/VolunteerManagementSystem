@@ -3,6 +3,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using System.Text;
+using VolunteerManagerment.API.Middlewares;
 using VolunteerManagerment.Application;
 using VolunteerManagerment.Infrastructure;
 
@@ -65,6 +66,8 @@ builder.Services.AddOpenApi(options =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

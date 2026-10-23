@@ -15,4 +15,5 @@ public class ActivityRegistration : BaseEntity
     public Activity Activity { get; set; } = null!;
     public Volunteer Volunteer { get; set; } = null!;
     public User? Approved { get; set; }
+    public ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
 }

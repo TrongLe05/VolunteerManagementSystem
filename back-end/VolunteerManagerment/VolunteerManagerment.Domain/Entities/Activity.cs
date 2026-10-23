@@ -22,4 +22,5 @@ public class Activity : BaseEntity, IAuditableEntity
     public User Creator { get; set; } = null!;
     public ICollection<ActivityLocation> Locations { get; set; } = [];
     public ICollection<ActivityRegistration> Registrations { get; set; } = [];
+    public ICollection<AttendanceSession> AttendanceSessions { get; set; } = [];
 }

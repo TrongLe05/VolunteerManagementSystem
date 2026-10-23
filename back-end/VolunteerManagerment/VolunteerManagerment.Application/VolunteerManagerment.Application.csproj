@@ -17,4 +17,9 @@
     <ProjectReference Include="..\VolunteerManagerment.Domain\VolunteerManagerment.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Features\Attendances\DTOs\" />
+    <Folder Include="Features\Attendances\Queries\" />
+  </ItemGroup>
+
 </Project>
