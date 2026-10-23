@@ -14,7 +14,7 @@ namespace VolunteerManagerment.API.Controllers;
 public class OrganizationsController(ISender sender) : ControllerBase
 {
     [HttpGet]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<IActionResult> GetOrganizations([FromQuery] string? searchTerm, CancellationToken cancellationToken)
     {
         var organizations = await sender.Send(new GetOrganizationsQuery(searchTerm), cancellationToken);
