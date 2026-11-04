@@ -1,11 +1,44 @@
-import react, { reactCompilerPreset } from '@vitejs/plugin-react'
-import babel from '@rolldown/plugin-babel'
-import { defineConfig } from 'vite'
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import babel from "@rolldown/plugin-babel";
+import { defineConfig } from "vite";
+import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
+  root: import.meta.dirname,
+  build: {
+    outDir: path.resolve(import.meta.dirname, "dist"),
+    emptyOutDir: true,
+    rollupOptions: {
+      input: path.resolve(import.meta.dirname, "index.html"),
+    },
+  },
   plugins: [
     react(),
-    babel({ presets: [reactCompilerPreset()] })
+    tailwindcss(),
+    babel({ presets: [reactCompilerPreset()] }),
   ],
-})
+  resolve: {
+    alias: {
+      "@": path.resolve(import.meta.dirname, "./src"),
+      "cn": path.resolve(import.meta.dirname, "./src/lib/utils"),
+    },
+  },
+  server: {
+    host: "0.0.0.0",
+    port: 5173,
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:5026",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/hubs": {
+        target: "http://127.0.0.1:5026",
+        ws: true,
+        changeOrigin: true,
+      },
+    },
+  },
+});

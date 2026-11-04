@@ -1,0 +1,306 @@
+/* Design tokens (Tailwind v4). Import after `@import "tailwindcss";` */
+:root {
+  --radius: 0.5rem;
+  --background: #fff;
+  --foreground: #16202b;
+  --card: #fff;
+  --card-foreground: #16202b;
+  --popover: #fff;
+  --popover-foreground: #16202b;
+  --primary: #00568c;
+  --primary-foreground: #fff;
+  --secondary: #f5f7fa;
+  --secondary-foreground: #16202b;
+  --muted: #edf1f5;
+  --muted-foreground: #586573;
+  --subtle-foreground: #667381;
+  --frame: #f8f8fa;
+  --border-strong: #bfc9d4;
+  --accent: #e8f0f7;
+  --accent-foreground: #023f68;
+  --destructive: #c4342b;
+  --destructive-foreground: #fff;
+  --warning: #96601b;
+  --warning-foreground: #fff;
+  --success: #0b7a71;
+  --success-foreground: #fff;
+  --info: #2f6fb0;
+  --info-foreground: #fff;
+  --border: #d7dee6;
+  --input: #93a1b0;
+  --ring: #00568c;
+  --sidebar: #003a61;
+  --sidebar-foreground: #d6e4ef;
+  --sidebar-primary: #295a7a;
+  --sidebar-primary-foreground: #fff;
+  --sidebar-accent: #295a7a;
+  --sidebar-accent-foreground: #fff;
+  --sidebar-border: #ffffff1f;
+  --sidebar-ring: #8fb8d6;
+  --chart-1: #00568c;
+  --chart-2: #e07b1a;
+  --chart-3: #0f8a80;
+  --chart-4: #8a55c4;
+  --chart-5: #d0453b;
+  --page-from: #ecf8ff;
+  --page-to: #ffffff;
+  --shadow-sm: 0 1px 2px #101c2c12;
+  --shadow-lg: 0 10px 24px #101c2c21, 0 2px 6px #101c2c12;
+  --faculty-navy: #134d8b;
+  --faculty-navy-hover: #0e3d6e;
+  --faculty-blue: #0055d4;
+  --navy-900: #001324;
+  --navy-800: #001f3f;
+  --navy-700: #003152;
+  --navy-500: #003152;
+  --navy-light: #00568c;
+  --faculty-gold: #ffcd00;
+  --accent-cyan: #22d3ee;
+  --accent-cyan-dark: #0891b2;
+  --dark-band: #0a1628;
+  --bottom-bar: #060e1a;
+  --dthu-navy: #004686;
+  --dthu-navy-dark: #003366;
+  --dthu-gold: #fcdc05;
+  --dthu-blue: #0055d4;
+  --dthu-blue-hover: #0046b8;
+}
+
+.dark {
+  --background: #0f1720;
+  --foreground: #e6edf3;
+  --card: #151f2b;
+  --card-foreground: #e6edf3;
+  --popover: #151f2b;
+  --popover-foreground: #e6edf3;
+  --primary: #4b9fd6;
+  --primary-foreground: #06202f;
+  --secondary: #1b2733;
+  --secondary-foreground: #e6edf3;
+  --muted: #1b2733;
+  --muted-foreground: #98a6b4;
+  --subtle-foreground: #8896a3;
+  --frame: #121e2a;
+  --border-strong: #3d4f61;
+  --accent: #1d3347;
+  --accent-foreground: #cfe6f6;
+  --destructive: #e5645b;
+  --destructive-foreground: #1d0705;
+  --warning: #d9a050;
+  --warning-foreground: #1f1304;
+  --success: #3cb8ac;
+  --success-foreground: #04201d;
+  --info: #5aa2f0;
+  --info-foreground: #06202f;
+  --border: #2a3846;
+  --input: #5a6c7e;
+  --ring: #4b9fd6;
+  --sidebar: #0a2437;
+  --sidebar-foreground: #c6d8e6;
+  --sidebar-primary: #295a7a;
+  --sidebar-primary-foreground: #fff;
+  --sidebar-accent: #1d4560;
+  --sidebar-accent-foreground: #fff;
+  --sidebar-border: #ffffff1f;
+  --sidebar-ring: #8fb8d6;
+  --chart-1: #4b9fd6;
+  --chart-2: #f0a050;
+  --chart-3: #3cb8ac;
+  --chart-4: #b48be0;
+  --chart-5: #e5645b;
+  --page-from: #0d1c29;
+  --page-to: #0f1720;
+  --faculty-navy: #1d5fa6;
+  --faculty-navy-hover: #134d8b;
+  --faculty-blue: #3b82f6;
+  --navy-900: #001324;
+  --navy-800: #001f3f;
+  --navy-700: #003152;
+  --navy-500: #003152;
+  --navy-light: #00568c;
+  --faculty-gold: #ffcd00;
+  --accent-cyan: #22d3ee;
+  --accent-cyan-dark: #0891b2;
+  --dark-band: #0a1628;
+  --bottom-bar: #060e1a;
+  --dthu-navy: #004686;
+  --dthu-navy-dark: #003366;
+  --dthu-gold: #fcdc05;
+  --dthu-blue: #0055d4;
+  --dthu-blue-hover: #0046b8;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+/* Touch devices: use `coarse:` to enlarge hit areas without changing the desktop density */
+@custom-variant coarse (@media (pointer: coarse));
+
+@theme inline {
+  --font-sans: "Roboto", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", SFMono-Regular, Consolas, monospace;
+  /* Measured from the reference UI: controls 6px, containers 9px, cards 14px */
+  /* Type scale: 8 distinct sizes (11 12 13 14 15 17 22 34). Several names alias one size so existing
+   * class names keep working; prefer micro / meta / body / base / lead / title / heading / display. */
+  /* Floor is 11px (uppercase labels only); body-level text starts at 12px */
+  --text-micro: 11px;
+  --text-tiny: 12px;
+  --text-caption: 12px;
+  --text-label: 12px;
+  --text-meta: 12px;
+  --text-small: 13px;
+  --text-body: 13px;
+  --text-control: 14px;
+  --text-base: 14px;
+  --text-emph: 15px;
+  --text-lead: 15px;
+  --text-title: 17px;
+  --text-heading: 22px;
+  --text-display: 34px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 9px;
+  --radius-xl: 14px;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-frame: var(--frame);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-faculty-navy: var(--faculty-navy);
+  --color-faculty-navy-hover: var(--faculty-navy-hover);
+  --color-faculty-blue: var(--faculty-blue);
+  --color-navy-900: var(--navy-900);
+  --color-navy-800: var(--navy-800);
+  --color-navy-700: var(--navy-700);
+  --color-navy-500: var(--navy-500);
+  --color-navy-light: var(--navy-light);
+  --color-gold: var(--faculty-gold);
+  --color-faculty-gold: var(--faculty-gold);
+  --color-accent-cyan: var(--accent-cyan);
+  --color-accent-cyan-dark: var(--accent-cyan-dark);
+  --color-dark-band: var(--dark-band);
+  --color-bottom-bar: var(--bottom-bar);
+  --color-dthu-navy: var(--dthu-navy);
+  --color-dthu-navy-dark: var(--dthu-navy-dark);
+  --color-dthu-gold: var(--dthu-gold);
+  --color-dthu-blue: var(--dthu-blue);
+  --color-dthu-blue-hover: var(--dthu-blue-hover);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-lg: var(--shadow-lg);
+  /* Focus indicator: 2px gap in the surface colour + 2px solid ring (>= 3:1 on every surface, WCAG 2.4.11) */
+  --shadow-focus: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
+  /* Bordered fields: the border already turns --ring on focus, so add only a soft halo (a gap + solid ring on top of the border reads as a double outline) */
+  --shadow-focus-field: 0 0 0 3px color-mix(in srgb, var(--ring) 14%, transparent);
+}
+
+/* Page background of the app shell: diagonal wash, as in the reference UI */
+@utility bg-page { background-image: linear-gradient(45deg, var(--page-from), var(--page-to)); }
+
+/* Faculty brand gradients */
+@utility bg-gradient-hero { background-image: linear-gradient(135deg, #001324 0%, #003152 40%, #00568c 100%); }
+@utility bg-gradient-navy-cyan { background-image: linear-gradient(135deg, #003152, #001f3f 60%, #22d3ee 200%); }
+@utility bg-gradient-faculty-line { background-image: linear-gradient(to right, var(--faculty-navy), color-mix(in srgb, var(--faculty-navy) 50%, transparent), transparent); }
+
+/* Global stacking scale. Component-internal layering keeps small numbers (z-1…z-20); anything that
+ * must sit above page content uses a named layer so popups never hide behind app chrome. */
+@utility z-chrome { z-index: 30; }
+@utility z-chrome-top { z-index: 31; }
+@utility z-fixed { z-index: 40; }
+@utility z-overlay { z-index: 50; }
+@utility z-tooltip { z-index: 60; }
+
+/* Overlay motion. Radix keeps a closing layer mounted until its exit animation ends, so every layer gets an
+ * enter (`[data-state=open]`) and a faster exit (`[data-state=closed]`). Self-contained: no tw-animate-css needed.
+ *   anim-fade   backdrops          anim-pop    centred dialogs (scale + fade)
+ *   anim-popup  anchored popups (popover, menus, select, tooltip: grows from the trigger, nudged by data-side)
+ *   anim-slide-{right,left,top,bottom}  side sheets. Reduced motion falls back to a plain fade. */
+:root {
+  --anim-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --anim-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --anim-ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes dthu-fade-in { from { opacity: 0; } }
+@keyframes dthu-fade-out { to { opacity: 0; } }
+@keyframes dthu-pop-in { from { opacity: 0; scale: 0.96; } }
+@keyframes dthu-pop-out { to { opacity: 0; scale: 0.97; } }
+@keyframes dthu-popup-in { from { opacity: 0; scale: 0.96; translate: var(--dthu-x, 0) var(--dthu-y, 0); } }
+@keyframes dthu-popup-out { to { opacity: 0; scale: 0.97; translate: var(--dthu-x, 0) var(--dthu-y, 0); } }
+@keyframes dthu-slide-in { from { translate: var(--dthu-x, 0) var(--dthu-y, 0); } }
+@keyframes dthu-slide-out { to { translate: var(--dthu-x, 0) var(--dthu-y, 0); } }
+
+@utility anim-fade {
+  &[data-state="open"] { animation: dthu-fade-in 200ms var(--anim-ease-out) both; }
+  &[data-state="closed"] { animation: dthu-fade-out 150ms var(--anim-ease-in) both; }
+}
+@utility anim-pop {
+  &[data-state="open"] { animation: dthu-pop-in 200ms var(--anim-ease-out) both; }
+  &[data-state="closed"] { animation: dthu-pop-out 140ms var(--anim-ease-in) both; }
+  @media (prefers-reduced-motion: reduce) {
+    &[data-state="open"] { animation-name: dthu-fade-in; }
+    &[data-state="closed"] { animation-name: dthu-fade-out; }
+  }
+}
+@utility anim-popup {
+  transform-origin: var(--radix-popover-content-transform-origin, var(--radix-dropdown-menu-content-transform-origin, var(--radix-context-menu-content-transform-origin, var(--radix-menubar-content-transform-origin, var(--radix-select-content-transform-origin, var(--radix-hover-card-content-transform-origin, var(--radix-tooltip-content-transform-origin, center)))))));
+  &[data-side="top"] { --dthu-y: 4px; }
+  &[data-side="bottom"] { --dthu-y: -4px; }
+  &[data-side="left"] { --dthu-x: 4px; }
+  &[data-side="right"] { --dthu-x: -4px; }
+  &[data-state="open"], &[data-state="delayed-open"], &[data-state="instant-open"] { animation: dthu-popup-in 160ms var(--anim-ease-out) both; }
+  &[data-state="closed"] { animation: dthu-popup-out 110ms var(--anim-ease-in) both; }
+  @media (prefers-reduced-motion: reduce) {
+    &[data-state="open"], &[data-state="delayed-open"], &[data-state="instant-open"] { animation-name: dthu-fade-in; }
+    &[data-state="closed"] { animation-name: dthu-fade-out; }
+  }
+}
+@utility anim-slide-right { --dthu-x: 100%; }
+@utility anim-slide-left { --dthu-x: -100%; }
+@utility anim-slide-top { --dthu-y: -100%; }
+@utility anim-slide-bottom { --dthu-y: 100%; }
+@utility anim-slide {
+  &[data-state="open"] { animation: dthu-slide-in 320ms var(--anim-ease-sheet) both; }
+  &[data-state="closed"] { animation: dthu-slide-out 220ms var(--anim-ease-in) both; }
+  @media (prefers-reduced-motion: reduce) {
+    &[data-state="open"] { animation-name: dthu-fade-in; }
+    &[data-state="closed"] { animation-name: dthu-fade-out; }
+  }
+}
+
+@layer base {
+  * { border-color: var(--border); }
+  body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); font-size: 14px; line-height: 1.5; }
+}

@@ -1,131 +1,73 @@
-import { useState } from "react";
-import heroImg from "./assets/hero.png";
-import reactLogo from "./assets/react.svg";
-import viteLogo from "./assets/vite.svg";
-import "./App.css";
-import { Routes, Route } from "react-router";
-import Products from "./pages/Products";
+import { Login } from "@/pages/auth/LoginPage";
+import { RegisterPage } from "@/pages/auth/RegisterPage";
+import { Route, Routes } from "react-router";
 import Home from "./pages/Home";
-import About from "./pages/About";
+import { ActivitiesPage } from "./pages/ActivitiesPage";
+import { CampaignsPage } from "./pages/CampaignsPage";
+import { MyRegistrationsPage } from "./pages/MyRegistrationsPage";
+import { ProfilePage } from "./pages/ProfilePage";
+import { AdminLayout } from "./components/layout/admin/AdminLayout";
+import { AdminOverviewPage } from "./pages/admin/AdminOverviewPage";
+import { AdminActivitiesPage } from "./pages/admin/AdminActivitiesPage";
+import { AdminActivityAttendancePage } from "./pages/admin/AdminActivityAttendancePage";
+import { AdminCampaignsPage } from "./pages/admin/AdminCampaignsPage";
+import { AdminOrganizationsPage } from "./pages/admin/AdminOrganizationsPage";
+import { AdminVolunteersPage } from "./pages/admin/AdminVolunteersPage";
+import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
+import { MainLayout } from "./components/layout/MainLayout";
+import ProtectedRoute from "./components/layout/ProtectedRoute";
+import { ChangePasswordPage } from "./pages/auth/ChangePasswordPage";
+import { ForgotPasswordPage } from "./pages/auth/ForgotPasswordPage";
+import { VerifyOtpPage } from "./pages/auth/VerifyOtpPage";
+import { DetailActivitiesPage } from "./pages/DetailActivitiesPage";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <>
-      <Routes>
+    <Routes>
+      {/* 1. Phân hệ Khách & Tình nguyện viên (MainLayout có Navbar) */}
+      <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/products" element={<Products />} />
-      </Routes>
+        <Route path="/activities">
+          <Route index element={<ActivitiesPage />} />
+          <Route path=":id" element={<DetailActivitiesPage />} />
+        </Route>
+        <Route path="/campaigns" element={<CampaignsPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/my-registrations" element={<MyRegistrationsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/account" element={<ProfilePage />} />
+        </Route>
+      </Route>
 
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      {/* 2. Phân hệ Quản trị riêng biệt có Sidebar (AdminLayout) */}
+      <Route
+        element={
+          <ProtectedRoute
+            allowedRoles={["SUPER_ADMIN", "ORGANIZATION_ADMIN"]}
+          />
+        }
+      >
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminOverviewPage />} />
+          <Route path="activities" element={<AdminActivitiesPage />} />
+          <Route
+            path="activities/:id/attendance"
+            element={<AdminActivityAttendancePage />}
+          />
+          <Route path="campaigns" element={<AdminCampaignsPage />} />
+          <Route path="organizations" element={<AdminOrganizationsPage />} />
+          <Route path="volunteers" element={<AdminVolunteersPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+        </Route>
+      </Route>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      {/* 3. Phân hệ Xác thực (Auth) */}
+      <Route path="/change-password" element={<ChangePasswordPage />} />
+      <Route path="/verify-otp" element={<VerifyOtpPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<RegisterPage />} />
+    </Routes>
   );
 }
 

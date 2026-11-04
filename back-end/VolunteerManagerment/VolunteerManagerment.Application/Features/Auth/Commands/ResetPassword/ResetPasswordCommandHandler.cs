@@ -27,7 +27,7 @@ public class ResetPasswordCommandHandler(
             cancellationToken
         );
 
-        var resetToken = token.FirstOrDefault();
+        var resetToken = token.OrderByDescending(rt => rt.CreatedAt).FirstOrDefault();
         if (resetToken == null || resetToken.ExpiresAt < DateTimeOffset.UtcNow)
             throw new InvalidOperationException("Mã OTP không chính xác hoặc đã hết hạn!");
 

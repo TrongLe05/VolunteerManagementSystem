@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
@@ -16,27 +16,38 @@ public class GetActivitiesQueryHandler(
 {
     public async Task<PageResult<ActivityDto>> Handle(GetActivitiesQuery request, CancellationToken cancellationToken)
     {
-        var userId = currentUserService.UserId
-            ?? throw new UnauthorizedAccessException("Không xác định được người dùng.");
-
-        var user = await userRepository.GetByIdWithDetailsAsync(userId, cancellationToken)
-            ?? throw new InvalidOperationException("Người dùng không tồn tại.");
-
-        var roles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
-
+        var userId = currentUserService.UserId;
         List<Guid>? allowOrgs = null;
+        var hideDraft = true;
 
-        if (roles.Contains("ORGANIZATION_ADMIN"))
+        if (userId.HasValue)
         {
-            allowOrgs = await organizationRepository.GetSubOrganizationIdsAsync(user.OrganizationId, cancellationToken);
-        } 
-        else if (roles.Contains("SUPER_ADMIN") || roles.Contains("VOLUNTEER"))
-        {
-            allowOrgs = null;
-        }
-        else
-        {
-            throw new UnauthorizedAccessException("Người dùng không có quyền truy cập.");
+            var user = await userRepository.GetByIdWithDetailsAsync(userId.Value, cancellationToken)
+                ?? throw new InvalidOperationException("Người dùng không tồn tại.");
+
+            var roles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
+
+            if (roles.Contains("SUPER_ADMIN"))
+            {
+                allowOrgs = null;
+                hideDraft = false;
+            }
+            else if (roles.Contains("ORGANIZATION_ADMIN"))
+            {
+                // Cho phép xem các hoạt động thuộc cây con của đơn vị mình VÀ các đơn vị cấp trên (Root / Ancestors)
+                allowOrgs = await organizationRepository.GetVisibleOrganizationIdsAsync(user.OrganizationId, cancellationToken);
+                hideDraft = false;
+            }
+            else if (roles.Contains("VOLUNTEER"))
+            {
+                // Tình nguyện viên xem các hoạt động thuộc cây con của đơn vị mình VÀ các đơn vị cấp trên (Root / Ancestors)
+                allowOrgs = await organizationRepository.GetVisibleOrganizationIdsAsync(user.OrganizationId, cancellationToken);
+                hideDraft = true;
+            }
+            else
+            {
+                throw new UnauthorizedAccessException("Người dùng không có quyền truy cập.");
+            }
         }
 
         var query = context.Activities
@@ -50,12 +61,12 @@ public class GetActivitiesQueryHandler(
             query = query.Where(a => allowOrgs.Contains(a.Campaign.OrganizationId));
         }
 
-        if (roles.Contains("VOLUNTEER"))
+        if (hideDraft)
         {
             query = query.Where(a => a.Status != "DRAFT");
         }
 
-        if(request.CampaignId.HasValue)
+        if (request.CampaignId.HasValue)
         {
             query = query.Where(a => a.CampaignId == request.CampaignId.Value);
         }
@@ -99,6 +110,7 @@ public class GetActivitiesQueryHandler(
                 a.CreditDays,
                 a.Status,
                 a.CreatedBy,
+                a.Registrations.Count(r => r.Status == "APPROVED" || r.Status == "REGISTERED"),
                 a.Locations.Select(l => new ActivityLocationDto(
                     l.Id,
                     l.ActivityId,

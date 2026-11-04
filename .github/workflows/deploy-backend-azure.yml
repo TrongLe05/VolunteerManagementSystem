@@ -1,0 +1,42 @@
+name: CD - Deploy Backend to Azure App Service
+
+on:
+  push:
+    branches: [ master, main ]
+    paths:
+      - 'back-end/**'
+      - '.github/workflows/deploy-backend-azure.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy to Azure Web App
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore Dependencies
+        run: dotnet restore back-end/VolunteerManagerment/VolunteerManagerment.slnx
+
+      - name: Run Backend Tests Before Deploy
+        run: dotnet test back-end/VolunteerManagerment/VolunteerManagerment.Tests/VolunteerManagerment.Tests.csproj --configuration Release --verbosity normal
+
+      - name: Publish .NET API
+        run: dotnet publish back-end/VolunteerManagerment/VolunteerManagerment.API/VolunteerManagerment.API.csproj --configuration Release --no-restore -o ./publish
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./publish

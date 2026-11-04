@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 
@@ -40,16 +40,7 @@ public class ReviewActivityRegistrationHandler(
             throw new UnauthorizedAccessException("Bạn không có quyền duyệt đơn đăng ký này.");
         }
 
-        if (registration.Status == "CANCELLED")
-            throw new InvalidOperationException("Tình nguyện viên đã huỷ đơn đăng ký này, không thể duyệt.");
-
-        if (registration.Activity.Status is "COMPLETED" or "CANCELLED")
-            throw new InvalidOperationException("Hoạt động đã kết thúc hoặc bị huỷ, không thể duyệt đơn đăng ký.");
-
-        registration.Status = request.Status;
-        registration.ApprovedBy = userId;
-        registration.ApprovedAt = DateTimeOffset.UtcNow;
-
+        registration.Review(request.Status, registration.Activity.Status, userId, DateTimeOffset.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;

@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 
@@ -29,19 +29,7 @@ public class CancelActivityRegistrationHandler(
         var registration = await activityRegistrationRepository.GetByActivityAndVolunteerAsync(request.ActivityId, volunteer.Id)
             ?? throw new InvalidOperationException("Bạn chưa đăng ký tham gia hoạt động này.");
 
-        if (registration.Status is "CANCELLED" or null)
-        {
-            throw new InvalidOperationException("Bạn chưa đăng ký hoạt động này hoặc đã huỷ trước đó.");
-        } 
-        else if (registration.Status is "REJECTED")
-        {
-            throw new InvalidOperationException("Đơn đăng ký đã bị từ chối, không thể huỷ.");
-        }
-
-        if (DateTimeOffset.UtcNow > activity.StartTime)
-            throw new InvalidOperationException("Không thể huỷ đăng ký khi hoạt động đã bắt đầu hoặc đã kết thúc.");
-
-        registration.Status = "CANCELLED";
+        registration.Cancel(activity.StartTime, DateTimeOffset.UtcNow);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         return true;

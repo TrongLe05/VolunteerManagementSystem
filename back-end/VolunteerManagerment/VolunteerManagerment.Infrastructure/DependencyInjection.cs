@@ -5,6 +5,7 @@ using Resend;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 using VolunteerManagerment.Infrastructure.Authentication;
+using VolunteerManagerment.Infrastructure.BackgroundJobs;
 using VolunteerManagerment.Infrastructure.Persistence;
 using VolunteerManagerment.Infrastructure.Persistence.Repository;
 using VolunteerManagerment.Infrastructure.Services;
@@ -42,11 +43,18 @@ public static class DependencyInjection
         services.AddScoped<ICampaignRepository, CampaignRepository>();
 
         services.AddScoped<IActivityRepository, ActivityRepository>();
+
         services.AddScoped<IActivityRegistrationRepository, ActivityRegistrationRepository>();
+
+        services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+
+        services.AddScoped<IAttendanceSessionRepository, AttendanceSessionRepository>();
 
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
+
+        services.AddHostedService<ActivityStatusWorker>();
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -56,6 +64,8 @@ public static class DependencyInjection
         {
             options.ApiToken = configuration["Resend:ApiKey"] ?? string.Empty;
         });
+
+        services.AddHttpClient<ISupabaseStorageService, SupabaseStorageService>();
 
         services.AddTransient<IEmailService, ResendEmailService>();
 

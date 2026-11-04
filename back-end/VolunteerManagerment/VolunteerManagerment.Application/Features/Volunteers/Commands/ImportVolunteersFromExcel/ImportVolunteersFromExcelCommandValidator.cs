@@ -1,4 +1,4 @@
-﻿using FluentValidation;
+using FluentValidation;
 
 namespace VolunteerManagerment.Application.Features.Volunteers.Commands.ImportVolunteersFromExcel;
 
@@ -13,7 +13,8 @@ public class ImportVolunteersFromExcelCommandValidator : AbstractValidator<Impor
             .NotEmpty().WithMessage("Tên file không được để trống.")
             .Must(fileName => 
                 fileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase) || 
-                fileName.EndsWith(".xls", StringComparison.OrdinalIgnoreCase))
-            .WithMessage("Định dạng file không hợp lệ. Chỉ chấp nhận file Excel (.xlsx, .xls).");
+                fileName.EndsWith(".xls", StringComparison.OrdinalIgnoreCase) ||
+                fileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
+            .WithMessage("Định dạng file không hợp lệ. Chỉ chấp nhận file Excel (.xlsx, .xls, .csv).");
     }
 }

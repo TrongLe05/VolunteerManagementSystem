@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using System.Xml.Linq;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
@@ -31,7 +31,7 @@ public class GetOrganizationsQueryHandler(
                 }
                 else if (roles.Contains("ORGANIZATION_ADMIN"))
                 {
-                    // ADMIN can access only their own organization
+                    // ORGANIZATION_ADMIN can only manage and see their own organization and sub-organizations
                     allowedOrgIds = await organizationRepository.GetSubOrganizationIdsAsync(user.OrganizationId, cancellationToken);    
                 }
             }

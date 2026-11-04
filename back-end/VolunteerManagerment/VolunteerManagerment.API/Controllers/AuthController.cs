@@ -8,6 +8,8 @@ using VolunteerManagerment.Application.Features.Auth.Commands.Logout;
 using VolunteerManagerment.Application.Features.Auth.Commands.RefreshTokens;
 using VolunteerManagerment.Application.Features.Auth.Commands.Register;
 using VolunteerManagerment.Application.Features.Auth.Commands.ResetPassword;
+using VolunteerManagerment.Application.Features.Auth.Commands.UploadAvatar;
+using VolunteerManagerment.Application.Features.Auth.Commands.VerifyOtp;
 using VolunteerManagerment.Application.Features.Auth.Query.GetMe;
 
 namespace VolunteerManagerment.API.Controllers;
@@ -54,6 +56,17 @@ public class AuthController(ISender sender) : ControllerBase
         return Ok(result);
     }
 
+    [HttpPost("me/avatar")]
+    [Authorize]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadAvatar([FromForm] IFormFile file, CancellationToken cancellationToken)
+    {
+        using var stream = file.OpenReadStream();
+        var command = new UploadAvatarCommand(stream, file.FileName, file.ContentType);
+        var result = await sender.Send(command, cancellationToken);
+        return Ok(new { avatarUrl = result });
+    }
+
     [HttpPost("change-password")]
     [Authorize]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordCommand command, CancellationToken cancellationToken)
@@ -61,6 +74,7 @@ public class AuthController(ISender sender) : ControllerBase
         var result = await sender.Send(command, cancellationToken);
         return Ok(result);
     }
+
 
     [HttpPost("forgot-password")]
     [AllowAnonymous]
@@ -77,4 +91,13 @@ public class AuthController(ISender sender) : ControllerBase
         var result = await sender.Send(command, cancellationToken);
         return Ok(result);
     }
+
+    [HttpPost("verify-otp")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpCommand command, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(command, cancellationToken);
+        return Ok(result);
+    }
+
 }

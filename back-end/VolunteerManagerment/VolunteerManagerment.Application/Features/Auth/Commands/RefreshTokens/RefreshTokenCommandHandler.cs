@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 using VolunteerManagerment.Application.Features.Auth.DTOs;
@@ -36,7 +36,7 @@ public class RefreshTokenCommandHandler(
         existingToken.RevokedAt = DateTimeOffset.UtcNow;
         refreshTokenRepository.Update(existingToken);
 
-        var roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
+        var roles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
         var newAccessToken = jwtTokenGenerator.GenerateToken(user, roles, user.Organization.Name);
         var newRefreshToken = jwtTokenGenerator.GenerateRefreshToken();
 
@@ -44,7 +44,7 @@ public class RefreshTokenCommandHandler(
         {
             Token = newRefreshToken,
             UserId = user.Id,
-            ExpiresAt = DateTimeOffset.UtcNow.AddDays(7), // Set expiration for the new refresh token
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
             IsRevoked = false
         };
 

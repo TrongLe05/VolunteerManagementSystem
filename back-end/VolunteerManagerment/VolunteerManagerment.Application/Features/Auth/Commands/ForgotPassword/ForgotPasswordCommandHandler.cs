@@ -17,8 +17,9 @@ public class ForgotPasswordCommandHandler(
     {
         var user = await userRepository.GetByUserNameOrEmailAsync(request.Email, cancellationToken);
 
-        if (user == null || !user.IsActive) return true;
-          
+        if (user == null || !user.IsActive) 
+            throw new KeyNotFoundException("Email này chưa được đăng ký trong hệ thống!");
+
         var otp = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
 
         var passwordResetToken = new PasswordResetToken

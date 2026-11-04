@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Resend;
 using VolunteerManagerment.Application.Common.Interfaces;
@@ -15,9 +15,10 @@ public class ResendEmailService(
     {
         try
         {
+            var fromAddress = configuration["Resend:FromEmail"] ?? "Volunteer System <onboarding@resend.dev>";
             var message = new EmailMessage
             {
-                From = "Volunteer System <onboarding@resend.dev>",
+                From = fromAddress,
                 To = { toEmail },
                 Subject = "[Volunteer System] Mã xác nhận đặt lại mật khẩu",
                 HtmlBody = $"""
@@ -45,7 +46,7 @@ public class ResendEmailService(
         catch (Exception ex)
         {
             logger.LogError(ex, "Lỗi khi gửi email OTP tới: {Email}", toEmail);
-
+            throw;
         }
     }
 }

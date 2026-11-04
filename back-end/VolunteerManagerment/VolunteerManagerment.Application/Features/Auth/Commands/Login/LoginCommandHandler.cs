@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 using VolunteerManagerment.Application.Features.Auth.DTOs;
@@ -19,10 +19,10 @@ public sealed class LoginCommandHandler(
         // tìm người dùng theo username hoặc email
         var user = await userRepository.GetByUserNameOrEmailAsync(request.UsernameOrEmail, cancellationToken);
 
-        if (user == null || !passwordHasher.VerifyPassword(request.Password, user!.PasswordHash))
+        if (user == null || !passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
             throw new UnauthorizedAccessException("Tài khoản không tồn tại hoặc mật khẩu không chính xác!");
 
-        if (user != null && !user.IsActive) 
+        if (!user.IsActive) 
             throw new UnauthorizedAccessException("Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ ban quản trị!");
 
         // lấy danh sách tên role

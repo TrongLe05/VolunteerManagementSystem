@@ -6,5 +6,6 @@ public record GetMeResponseDto(
     string Email,
     Guid OrganizationId,
     string OrganizationName,
+    string AvatarUrl,
     List<string> Roles
 );

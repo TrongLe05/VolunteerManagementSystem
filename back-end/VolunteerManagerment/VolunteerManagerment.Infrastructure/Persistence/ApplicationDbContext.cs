@@ -20,6 +20,8 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<Activity> Activities => Set<Activity>();
     public DbSet<ActivityLocation> ActivityLocations => Set<ActivityLocation>();
     public DbSet<ActivityRegistration> ActivityRegistrations => Set<ActivityRegistration>();
+    public DbSet<Attendance> Attendances => Set<Attendance>();
+    public DbSet<AttendanceSession> AttendanceSessions => Set<AttendanceSession>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -137,6 +139,46 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 .WithMany()
                 .HasForeignKey(ar => ar.ApprovedBy)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<Attendance>(entity =>
+        {
+            entity.ToTable("attendances");
+            entity.HasIndex(a => new { a.AttendanceSessionId, a.ActivityRegistrationId }).IsUnique();
+            entity.Property(a => a.Latitude).HasPrecision(10, 7);
+            entity.Property(a => a.Longitude).HasPrecision(10, 7);
+            entity.Property(a => a.LocationAccuracyMeters).HasPrecision(10, 2);
+            entity.Property(a => a.FaceSimilarity).HasPrecision(5, 4);
+            entity.Property(a => a.CreditEarned).HasPrecision(4, 2);
+            entity.Property(a => a.LocationStatus).HasMaxLength(30);
+            entity.Property(a=> a.VerificationMethod).HasMaxLength(30);
+            entity.Property(a => a.Status).HasMaxLength(30);
+            entity.HasOne(a => a.AttendanceSession)
+                .WithMany(s => s.Attendances)
+                .HasForeignKey(a => a.AttendanceSessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(a => a.ActivityRegistration)
+                .WithMany(ar => ar.Attendances)
+                .HasForeignKey(a => a.ActivityRegistrationId)
+                .OnDelete(DeleteBehavior.Cascade);  
+            entity.HasOne(a => a.Reviewer)
+                .WithMany()
+                .HasForeignKey(a => a.ReviewedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<AttendanceSession>(entity =>
+        {
+            entity.ToTable("attendance_sessions");
+            entity.Property(s => s.Type).HasMaxLength(20).IsRequired();
+            entity.HasOne(s => s.Activity)
+                .WithMany(a => a.AttendanceSessions)
+                .HasForeignKey(s => s.ActivityId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(s => s.Creator)
+                .WithMany()
+                .HasForeignKey(s => s.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Organization>().ToTable("organizations");

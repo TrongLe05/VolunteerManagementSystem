@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VolunteerManagerment.Application.Features.Activities.Commands.CancelActivityRegistration;
@@ -27,7 +27,7 @@ namespace VolunteerManagerment.API.Controllers
         }
 
         [HttpGet("{id}")]
-        [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN,VOLUNTEER")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetActivityById([FromRoute] Guid id, CancellationToken cancellationToken)
         {
             var activity = await sender.Send(new GetActivityByIdQuery(id), cancellationToken);
@@ -35,7 +35,7 @@ namespace VolunteerManagerment.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN,VOLUNTEER")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetActivities([FromQuery] GetActivitiesQuery query, CancellationToken cancellationToken)
         {
             var activities = await sender.Send(query, cancellationToken);
