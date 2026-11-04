@@ -2,10 +2,10 @@ name: CD - Deploy Frontend to Vercel
 
 on:
   push:
-    branches: [ master, main, develop ]
+    branches: [master, main, develop]
     paths:
-      - 'front-end/**'
-      - '.github/workflows/deploy-frontend-vercel.yml'
+      - "front-end/**"
+      - ".github/workflows/deploy-frontend-vercel.yml"
   workflow_dispatch:
 
 concurrency:
@@ -52,7 +52,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: "pnpm"
           cache-dependency-path: front-end/pnpm-lock.yaml
 
       - name: Install Dependencies

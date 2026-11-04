@@ -208,3 +208,5 @@ experiments/
 config.json
 
 docs/
+.vercel
+.env*
