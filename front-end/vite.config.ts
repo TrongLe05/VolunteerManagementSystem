@@ -6,6 +6,14 @@ import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
+  root: import.meta.dirname,
+  build: {
+    outDir: path.resolve(import.meta.dirname, "dist"),
+    emptyOutDir: true,
+    rollupOptions: {
+      input: path.resolve(import.meta.dirname, "index.html"),
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
