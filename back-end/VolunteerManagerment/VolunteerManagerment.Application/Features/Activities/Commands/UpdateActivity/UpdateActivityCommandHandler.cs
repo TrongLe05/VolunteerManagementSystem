@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 using VolunteerManagerment.Domain.Entities;
@@ -6,6 +6,7 @@ using VolunteerManagerment.Domain.Entities;
 namespace VolunteerManagerment.Application.Features.Activities.Commands.UpdateActivity;
 
 public class UpdateActivityCommandHandler(
+    IApplicationDbContext context,
     ICurrentUserService currentUserService,
     IUserRepository userRepository,
     IActivityRepository activityRepository,
@@ -13,13 +14,12 @@ public class UpdateActivityCommandHandler(
     IUnitOfWork unitOfWork
 ) : IRequestHandler<UpdateActivityCommand, bool>
 {
+    private static readonly TimeSpan VietnamOffset = TimeSpan.FromHours(7);
+
     public async Task<bool> Handle(UpdateActivityCommand request, CancellationToken cancellationToken)
     {
         var activity = await activityRepository.GetByIdWithDetailsAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException("Hoạt động không tồn tại.");
-
-        if (activity.Status is "COMPLETED" or "CANCELLED")
-            throw new InvalidOperationException("Không thể chỉnh sửa hoạt động đã kết thúc hoặc đã bị hủy.");
 
         var userId = currentUserService.UserId
             ?? throw new UnauthorizedAccessException("Không thể xác định người dùng hiện tại.");
@@ -29,26 +29,26 @@ public class UpdateActivityCommandHandler(
         var roles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
         if (roles.Contains("SUPER_ADMIN"))
         {
-
-        } 
+            // Super admin can update any activity
+        }
         else if (roles.Contains("ORGANIZATION_ADMIN"))
         {
             var allowedOrgs = await organizationRepository.GetSubOrganizationIdsAsync(user.OrganizationId, cancellationToken);
             if (!allowedOrgs.Contains(activity.Campaign.OrganizationId))
-                throw new UnauthorizedAccessException("Bạn không có quyền chỉnh sửa hoạt động của đơn vị này.");
+                throw new InvalidOperationException("Bạn không có quyền chỉnh sửa hoạt động của đơn vị này.");
         }
         else
         {
             throw new UnauthorizedAccessException("Người dùng hiện tại không có quyền chỉnh sửa hoạt động này.");
         }
 
-        var actStartDate = DateOnly.FromDateTime(request.StartTime.DateTime);
-        var actEndDate = DateOnly.FromDateTime(request.EndTime.DateTime);
+        var actStartDate = DateOnly.FromDateTime(request.StartTime.ToOffset(VietnamOffset).DateTime);
+        var actEndDate = DateOnly.FromDateTime(request.EndTime.ToOffset(VietnamOffset).DateTime);
 
         if (actStartDate < activity.Campaign.StartDate || actEndDate > activity.Campaign.EndDate)
-            throw new InvalidOperationException("Thời gian hoạt động phải nằm trong khoảng thời gian của chiến dịch.");
+            throw new InvalidOperationException($"Thời gian hoạt động phải nằm trong khoảng thời gian của chiến dịch ({activity.Campaign.StartDate:dd/MM/yyyy} - {activity.Campaign.EndDate:dd/MM/yyyy}).");
 
-        activity.Name = request.Name;
+        activity.Name = request.Name.Trim();
         activity.Description = request.Description?.Trim();
         activity.StartTime = request.StartTime.ToUniversalTime();
         activity.EndTime = request.EndTime.ToUniversalTime();
@@ -60,20 +60,24 @@ public class UpdateActivityCommandHandler(
 
         if (request.Locations is not null)
         {
-            activity.Locations.Clear();
-            foreach (var l in request.Locations)
+            if (activity.Locations.Count > 0)
             {
-                activity.Locations.Add(new ActivityLocation
-                {
-                    Id = Guid.Empty,
-                    ActivityId = activity.Id,
-                    Name = l.Name,
-                    Address = l.Address,
-                    Latitude = l.Latitude,
-                    Longitude = l.Longitude,
-                    AllowedRadiusMeters = l.AllowedRadiusMeters,
-                });
+                context.ActivityLocations.RemoveRange(activity.Locations);
             }
+
+            var newLocations = request.Locations.Select(l => new ActivityLocation
+            {
+                Id = Guid.NewGuid(),
+                ActivityId = activity.Id,
+                Name = l.Name.Trim(),
+                Address = l.Address?.Trim(),
+                Latitude = l.Latitude,
+                Longitude = l.Longitude,
+                AllowedRadiusMeters = l.AllowedRadiusMeters,
+                CreatedAt = DateTimeOffset.UtcNow
+            }).ToList();
+
+            await context.ActivityLocations.AddRangeAsync(newLocations, cancellationToken);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

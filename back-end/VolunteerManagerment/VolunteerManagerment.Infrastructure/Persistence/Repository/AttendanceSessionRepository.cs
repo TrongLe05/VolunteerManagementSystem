@@ -17,6 +17,6 @@ public class AttendanceSessionRepository(ApplicationDbContext context) : Reposit
 
     public Task<bool> HasActiveSessionAsync(Guid activityId, string type, CancellationToken cancellationToken = default)
     {
-        return _dbSet.AnyAsync(x => x.ActivityId == activityId && x.Type == type && (x.EndedAt != null || x.EndedAt > DateTimeOffset.UtcNow), cancellationToken);   
+        return _dbSet.AnyAsync(x => x.ActivityId == activityId && x.Type == type && (x.EndedAt == null || x.EndedAt > DateTimeOffset.UtcNow), cancellationToken);   
     }
 }

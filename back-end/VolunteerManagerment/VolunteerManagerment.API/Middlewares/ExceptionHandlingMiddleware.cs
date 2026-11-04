@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Text.Json;
 using FluentValidation;
 
@@ -31,7 +31,7 @@ public class ExceptionHandlingMiddleware(
         {
             ValidationException validationEx => (
                 StatusCodes.Status400BadRequest,
-                "Dữ liệu đầu vào không hợp lệ.",
+                validationEx.Errors.FirstOrDefault()?.ErrorMessage ?? "Dữ liệu đầu vào không hợp lệ.",
                 validationEx.Errors
                     .GroupBy(e => e.PropertyName)
                     .ToDictionary(

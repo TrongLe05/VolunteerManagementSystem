@@ -2,7 +2,8 @@ import type { RefreshTokenResponse } from "@/types/auth.types";
 import axios, { type InternalAxiosRequestConfig } from "axios";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://localhost:7161/api";
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? "/api" : "https://localhost:7161/api");
 
 const axiosClient = axios.create({
   baseURL: API_BASE_URL,
@@ -30,10 +31,11 @@ axiosClient.interceptors.response.use(
 
     const isAuthEndpoint =
       originalRequest?.url?.includes("/auth/login") ||
-      originalRequest?.url?.includes("/auth/register");
+      originalRequest?.url?.includes("/auth/register") ||
+      originalRequest?.url?.includes("/auth/refresh-token");
 
     if (
-      error.response?.status === 401 &&
+      (error.response?.status === 401 || error.response?.status === 403) &&
       !originalRequest._retry &&
       !isAuthEndpoint
     ) {
@@ -59,14 +61,15 @@ axiosClient.interceptors.response.use(
           localStorage.setItem("accessToken", newAccessToken);
           localStorage.setItem("refreshToken", newRefreshToken);
 
-          // Gắn token mới vào lại request vừa bị lỗi 401 và thực hiện lại nó!
+          // Gắn token mới vào lại request vừa bị lỗi 401/403 và thực hiện lại nó!
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return axiosClient(originalRequest);
         } catch (refreshError) {
-          // Nếu cả Refresh Token cũng hết hạn hoặc bị thu hồi -> Xóa sạch và đưa về trang Login
-          localStorage.removeItem("accessToken");
-          localStorage.removeItem("refreshToken");
-          window.location.href = "/login";
+          if (error.response?.status === 401) {
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            window.location.href = "/login";
+          }
           return Promise.reject(refreshError);
         }
       }

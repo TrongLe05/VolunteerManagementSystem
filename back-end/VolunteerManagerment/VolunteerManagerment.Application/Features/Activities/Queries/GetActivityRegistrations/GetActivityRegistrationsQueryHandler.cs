@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
@@ -21,7 +21,7 @@ public class GetActivityRegistrationsQueryHandler(
             ?? throw new KeyNotFoundException("Hoạt động không tồn tại.");
 
         var userId = currentUserService.UserId
-            ?? throw new UnauthorizedAccessException("Không xác địnhh được người dùng.");
+            ?? throw new UnauthorizedAccessException("Không xác định được người dùng.");
 
         var user = await userRepository.GetByIdWithDetailsAsync(userId, cancellationToken)
             ?? throw new UnauthorizedAccessException("Người dùng không tồn tại.");
@@ -55,7 +55,7 @@ public class GetActivityRegistrationsQueryHandler(
             var searchTerm = request.SearchTerm.Trim().ToLower();
             query = query.Where(ar =>
                 ar.Volunteer.FullName.ToLower().Contains(searchTerm) ||
-                ar.Volunteer.StudentCode.ToLower().Contains(searchTerm) ||
+                (ar.Volunteer.StudentCode != null && ar.Volunteer.StudentCode.ToLower().Contains(searchTerm)) ||
                 ar.Volunteer.VolunteerCode.ToLower().Contains(searchTerm)
             );
         }

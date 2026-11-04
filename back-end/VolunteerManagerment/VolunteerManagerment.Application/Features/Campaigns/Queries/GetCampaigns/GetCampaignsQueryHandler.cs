@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
@@ -29,6 +29,7 @@ public class GetCampaignsQueryHandler(
         }
         else if (roles.Contains("ORGANIZATION_ADMIN"))
         {
+            // Cho phép xem cây con của đơn vị mình VÀ các đơn vị cấp trên (Root / Ancestors)
             allowedOrgs = await organizationRepository.GetSubOrganizationIdsAsync(user.OrganizationId, cancellationToken);
         }
         else

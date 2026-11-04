@@ -3,8 +3,11 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Scalar.AspNetCore;
 using System.Text;
+using VolunteerManagerment.API.Hubs;
 using VolunteerManagerment.API.Middlewares;
+using VolunteerManagerment.API.Services;
 using VolunteerManagerment.Application;
+using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,6 +15,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IDashboardNotificationService, DashboardNotificationService>();
 
 var secretKey = builder.Configuration["JwtSetting:Secret"]
         ?? throw new InvalidOperationException("Chưa cấu hình JwtSetting:Secret");
@@ -32,6 +38,20 @@ builder.Services.AddAuthentication(options =>
         ValidIssuer = builder.Configuration["JwtSetting:Issuer"],
         ValidAudience = builder.Configuration["JwtSetting:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -69,10 +89,20 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            policy.WithOrigins("http://localhost:5173")
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
     });
 });
 
@@ -89,8 +119,10 @@ if (app.Environment.IsDevelopment())
         options.WithTitle("Volunteer Management API");
     });
 }
-
-app.UseHttpsRedirection();
+else
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors("AllowFrontend");
 
@@ -99,5 +131,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<DashboardHub>(DashboardHub.HubUrl);
 
 app.Run();

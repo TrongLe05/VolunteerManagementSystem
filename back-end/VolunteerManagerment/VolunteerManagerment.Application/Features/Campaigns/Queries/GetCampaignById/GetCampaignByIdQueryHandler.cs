@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 using VolunteerManagerment.Application.Features.Campaigns.DTOs;
@@ -30,7 +30,7 @@ public class GetCampaignByIdQueryHandler(
         }
         else if (roles.Contains("ORGANIZATION_ADMIN"))
         {
-            var allowedOrgs = await organizationRepository.GetSubOrganizationIdsAsync(user.OrganizationId, cancellationToken);
+            var allowedOrgs = await organizationRepository.GetVisibleOrganizationIdsAsync(user.OrganizationId, cancellationToken);
             if (!allowedOrgs.Contains(campaign.OrganizationId))
             {
                 throw new UnauthorizedAccessException("Bạn không có quyền truy cập chiến dịch này.");

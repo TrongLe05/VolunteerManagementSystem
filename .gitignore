@@ -204,4 +204,7 @@ x86/
 ### Learn
 experiments/
 
+# Local tool config
+config.json
+
 docs/

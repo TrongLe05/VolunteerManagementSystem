@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 using VolunteerManagerment.Domain.Entities;
 
@@ -15,18 +15,20 @@ public class OrganizationRepository(
             .Include(o => o.Children)
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
     }
+
     public async Task<bool> IsCodeExistsAsync(string code, Guid? excludeId = null, CancellationToken cancellationToken = default)
     {
         return await _dbSet.AnyAsync(
             o => o.Code == code && (!excludeId.HasValue || o.Id != excludeId.Value),
             cancellationToken);
     }
+
     public async Task<List<Guid>> GetSubOrganizationIdsAsync(Guid rootOrganizationId, CancellationToken cancellationToken = default)
     {
         var allOrgs = await _dbSet
             .AsNoTracking()
             .Where(o => o.IsActive)
-            .Select(o => new {o.Id, o.ParentId })
+            .Select(o => new { o.Id, o.ParentId })
             .ToListAsync(cancellationToken);
 
         var result = new List<Guid> { rootOrganizationId };
@@ -36,13 +38,50 @@ public class OrganizationRepository(
         return result;
     }
 
+    public async Task<List<Guid>> GetVisibleOrganizationIdsAsync(Guid organizationId, CancellationToken cancellationToken = default)
+    {
+        var allOrgs = await _dbSet
+            .AsNoTracking()
+            .Where(o => o.IsActive)
+            .Select(o => new { o.Id, o.ParentId })
+            .ToListAsync(cancellationToken);
+
+        var orgList = allOrgs.Select(x => (x.Id, x.ParentId)).ToList();
+        var result = new List<Guid> { organizationId };
+
+        // 1. Lấy tất cả đơn vị con cháu (Descendants)
+        CollectChildrenRecursive(organizationId, orgList, result);
+
+        // 2. Lấy tất cả đơn vị cấp trên (Ancestors / Cha / Ông / Root)
+        CollectAncestors(organizationId, orgList, result);
+
+        return result;
+    }
+
     private static void CollectChildrenRecursive(Guid parentId, List<(Guid Id, Guid? ParentId)> allOrgs, List<Guid> result)
     {
         var directChildren = allOrgs.Where(o => o.ParentId == parentId).Select(o => o.Id).ToList();
         foreach (var child in directChildren)
         {
-            result.Add(child);
+            if (!result.Contains(child))
+            {
+                result.Add(child);
+            }
             CollectChildrenRecursive(child, allOrgs, result);
+        }
+    }
+
+    private static void CollectAncestors(Guid currentId, List<(Guid Id, Guid? ParentId)> allOrgs, List<Guid> result)
+    {
+        var currentParentId = allOrgs.FirstOrDefault(o => o.Id == currentId).ParentId;
+        while (currentParentId.HasValue)
+        {
+            var parentId = currentParentId.Value;
+            if (!result.Contains(parentId))
+            {
+                result.Add(parentId);
+            }
+            currentParentId = allOrgs.FirstOrDefault(o => o.Id == parentId).ParentId;
         }
     }
 }

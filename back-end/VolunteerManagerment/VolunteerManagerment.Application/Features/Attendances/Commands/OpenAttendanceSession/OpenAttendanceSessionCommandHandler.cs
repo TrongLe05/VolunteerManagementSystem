@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 using VolunteerManagerment.Domain.Entities;
@@ -42,26 +42,20 @@ public class OpenAttendanceSessionCommandHandler(
             throw new UnauthorizedAccessException("Bạn không có quyền mở phiên điểm danh cho hoạt động này.");
         }
 
-        if (activity.Status is not ("OPEN" or "ONGOING")) 
-            throw new InvalidOperationException("Chỉ có thể mở phiên điểm danh cho hoạt động đang mở hoặc đang diễn ra.");
-
         var hasActiveSession = await attendanceSessionRepository.HasActiveSessionAsync(request.ActivityId, request.Type, cancellationToken);
         if (hasActiveSession)
             throw new InvalidOperationException("Đã tồn tại phiên điểm danh đang mở cho hoạt động này.");
 
-        if (activity.Status is "OPEN")
-        {
-            activity.Status = "ONGOING";
-            activity.UpdatedAt = DateTimeOffset.UtcNow;
-        }
+        var now = DateTimeOffset.UtcNow;
+        activity.EnsureCanOpenAttendanceSessionAndTransition(now);
 
         var attendanceSession = new AttendanceSession
         {
             ActivityId = request.ActivityId,
             Type = request.Type,
-            StartedAt = DateTimeOffset.UtcNow,
-            EndedAt = request.DurationMinutes.HasValue ? DateTimeOffset.UtcNow.AddMinutes(request.DurationMinutes.Value) : null,
-            CreatedAt = DateTimeOffset.UtcNow,
+            StartedAt = now,
+            EndedAt = request.DurationMinutes.HasValue ? now.AddMinutes(request.DurationMinutes.Value) : null,
+            CreatedAt = now,
             CreatedBy = userId
         };
 

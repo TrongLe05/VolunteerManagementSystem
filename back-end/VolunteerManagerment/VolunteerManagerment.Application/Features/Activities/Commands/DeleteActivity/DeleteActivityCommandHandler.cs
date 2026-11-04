@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 
@@ -17,7 +17,7 @@ public class DeleteActivityCommandHandler(
         var activity = await activityRepository.GetByIdWithDetailsAsync(request.Id, cancellationToken)
             ?? throw new KeyNotFoundException("Hoạt động không tồn tại.");
 
-        var userId = currentUserService.UserId 
+        var userId = currentUserService.UserId
             ?? throw new UnauthorizedAccessException("Không xác định được người dùng.");
 
         var user = await userRepository.GetByIdWithDetailsAsync(userId, cancellationToken)
@@ -27,23 +27,20 @@ public class DeleteActivityCommandHandler(
 
         if (roles.Contains("SUPER_ADMIN"))
         {
-
+            // Super admin can delete any activity
         }
         else if (roles.Contains("ORGANIZATION_ADMIN"))
         {
             var allowedOrgs = await organizationRepository.GetSubOrganizationIdsAsync(user.OrganizationId, cancellationToken);
             if (!allowedOrgs.Contains(activity.Campaign.OrganizationId))
             {
-                throw new UnauthorizedAccessException("Bạn không có quyền xóa hoạt động này.");
+                throw new InvalidOperationException("Bạn không có quyền xóa hoạt động này.");
             }
         }
         else
         {
             throw new UnauthorizedAccessException("Bạn không có quyền xóa hoạt động này.");
         }
-
-        if (activity.Status is not "DRAFT") 
-            throw new InvalidOperationException("Chỉ có thể xóa hoạt động ở trạng thái nháp (DRAFT).");
 
         activityRepository.Delete(activity);
         await unitOfWork.SaveChangesAsync(cancellationToken);

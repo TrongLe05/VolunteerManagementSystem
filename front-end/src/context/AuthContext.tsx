@@ -6,7 +6,12 @@ import {
   type ReactNode,
 } from "react";
 import { authApi } from "@/api/authApi";
-import type { LoginRequest, RoleType, UserInfo } from "@/types/auth.types";
+import type {
+  LoginRequest,
+  RegisterRequest,
+  RoleType,
+  UserInfo,
+} from "@/types/auth.types";
 
 // 1. Định nghĩa "Interface" cho AuthContext (giống ICurrentUserService ở C#)
 interface AuthContextType {
@@ -15,6 +20,16 @@ interface AuthContextType {
   isLoading: boolean;
   login: (data: LoginRequest) => Promise<void>;
   logout: () => Promise<void>;
+  register: (data: RegisterRequest) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  verifyOtp: (email: string, otp: string) => Promise<void>;
+  resetPassword: (
+    email: string,
+    otp: string,
+    newPassword: string,
+    confirmPassword: string,
+  ) => Promise<void>;
+  updateAvatar: (file: File | null) => Promise<void>;
   hasRole: (roles: RoleType[]) => boolean;
 }
 
@@ -76,6 +91,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const register = async (data: RegisterRequest) => {
+    await authApi.register(data);
+  };
+
+  const verifyOtp = async (email: string, otp: string) => {
+    await authApi.verifyOtp(email, otp);
+  };
+
+  const forgotPassword = async (email: string) => {
+    await authApi.forgotPassword(email);
+  };
+
+  const resetPassword = async (
+    email: string,
+    otp: string,
+    newPassword: string,
+    confirmPassword: string,
+  ) => {
+    await authApi.resetPassword(email, otp, newPassword, confirmPassword);
+  };
+
+  const updateAvatar = async (file: File | null) => {
+    if (!file) return;
+    const result = await authApi.updateAvatar(file);
+    if (result?.avatarUrl) {
+      setUser((prev) =>
+        prev ? { ...prev, avatarUrl: result.avatarUrl } : prev,
+      );
+    }
+  };
   // Hàm kiểm tra quyền (Role-based check cho Sidebar & ProtectedRoute)
   const hasRole = (allowedRoles: RoleType[]): boolean => {
     if (!user || !user.roles) return false;
@@ -85,13 +130,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-            user,
-            isAuthenticated: !!user,
-            isLoading,
-            login,
-            logout,
-            hasRole,
-          }}
+        user,
+        isAuthenticated: !!user,
+        isLoading,
+        login,
+        logout,
+        register,
+        forgotPassword,
+        verifyOtp,
+        resetPassword,
+        updateAvatar,
+        hasRole,
+      }}
     >
       {children}
     </AuthContext.Provider>

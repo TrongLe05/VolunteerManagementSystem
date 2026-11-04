@@ -29,6 +29,7 @@ public class GetMeQueryHandler(
             user.Email,
             user.OrganizationId,
             user.Organization.Name,
+            user.AvatarUrl = user.AvatarUrl ?? string.Empty,
             roles
         );
 

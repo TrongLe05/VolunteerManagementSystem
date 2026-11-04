@@ -3,4 +3,5 @@
   <Project Path="VolunteerManagerment.Application/VolunteerManagerment.Application.csproj" Id="496b5713-4ac7-499e-b827-27caac17af0e" />
   <Project Path="VolunteerManagerment.Domain/VolunteerManagerment.Domain.csproj" Id="32723c47-bcef-474c-8777-4b9d18688c96" />
   <Project Path="VolunteerManagerment.Infrastructure/VolunteerManagerment.Infrastructure.csproj" Id="3fbab6f9-95ec-47ea-b935-036dde17d998" />
+  <Project Path="VolunteerManagerment.Tests/VolunteerManagerment.Tests.csproj" />
 </Solution>

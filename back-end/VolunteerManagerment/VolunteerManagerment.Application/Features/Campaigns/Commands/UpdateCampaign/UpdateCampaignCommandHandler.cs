@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 
@@ -33,7 +33,7 @@ public class UpdateCampaignCommandHandler(
             var allowedOrgs = await organizationRepository.GetSubOrganizationIdsAsync(user.OrganizationId, cancellationToken);
             if (!allowedOrgs.Contains(campaign.OrganizationId))
             {
-                throw new UnauthorizedAccessException("Người dùng không có quyền cập nhật chiến dịch.");
+                throw new InvalidOperationException("Người dùng không có quyền cập nhật chiến dịch ngoài phạm vi đơn vị quản lý.");
             }
         }
         else
@@ -41,15 +41,12 @@ public class UpdateCampaignCommandHandler(
             throw new UnauthorizedAccessException("Người dùng không có quyền cập nhật chiến dịch.");
         }
 
-        if (campaign.Status is "COMPLETED" or "CANCELLED")
-            throw new InvalidOperationException("Không thể cập nhật chiến dịch đã kết thúc hoặc đã hủy.");
-
-        campaign.Name = request.Name;
+        campaign.Name = request.Name.Trim();
         campaign.Description = request.Description?.Trim();
         campaign.StartDate = request.StartDate;
         campaign.EndDate = request.EndDate;
         campaign.Status = request.Status;
-        campaign.UpdatedAt = DateTime.UtcNow;
+        campaign.UpdatedAt = DateTimeOffset.UtcNow;
 
         campaignRepository.Update(campaign);
         await unitOfWork.SaveChangesAsync(cancellationToken);

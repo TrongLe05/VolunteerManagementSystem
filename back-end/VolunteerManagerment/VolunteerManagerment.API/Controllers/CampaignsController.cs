@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VolunteerManagerment.Application.Features.Campaigns.Commands.CreateCampaign;
@@ -23,6 +23,7 @@ public class CampaignsController(ISender sender) : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetCampaigns([FromQuery] GetCampaignsQuery query, CancellationToken cancellationToken)
     {
         var result = await sender.Send(query, cancellationToken);
@@ -30,7 +31,7 @@ public class CampaignsController(ISender sender) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN,VOLUNTEER")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetCampaignById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetCampaignByIdQuery(id), cancellationToken);

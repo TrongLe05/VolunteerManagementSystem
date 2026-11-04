@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 
@@ -15,36 +15,38 @@ public class UpdateMyProfileCommandHandler(
         var userId = currentUserService.UserId 
             ?? throw new UnauthorizedAccessException("Không xác định được người dùng.");
         
-        var volunteer = await volunteerRepository.GetByUserIdAsync(userId) 
-            ?? throw new KeyNotFoundException("Không tìm thấy hồ sơ tình nguyện viên.");
+        var volunteer = await volunteerRepository.GetByUserIdAsync(userId, cancellationToken) 
+            ?? throw new KeyNotFoundException("Không tìm thấy hồ sơ tình nguyện viên cho tài khoản này.");
 
-        volunteer.FullName = request.FullName;
-        volunteer.Phone = request.Phone;
-        volunteer.Gender = request.Gender;
+        volunteer.FullName = request.FullName.Trim();
+        volunteer.Phone = string.IsNullOrWhiteSpace(request.Phone) ? null : request.Phone.Trim();
+        volunteer.Gender = string.IsNullOrWhiteSpace(request.Gender) ? null : request.Gender.Trim().ToUpper();
         volunteer.DateOfBirth = request.DateOfBirth;
-        volunteer.ClassName = request.ClassName;
+        volunteer.ClassName = string.IsNullOrWhiteSpace(request.ClassName) ? null : request.ClassName.Trim();
 
-        if (!string.IsNullOrEmpty(request.StudentCode))
+        if (!string.IsNullOrWhiteSpace(request.StudentCode))
         {
-            var isStudentCodeExists = await volunteerRepository.IsStudentCodeExistsAsync(request.StudentCode, volunteer.Id, cancellationToken);
-            if (isStudentCodeExists)
+            var trimmedCode = request.StudentCode.Trim();
+            var existingWithCode = await volunteerRepository.GetByStudentCodeAsync(trimmedCode, cancellationToken);
+
+            if (existingWithCode != null && existingWithCode.Id != volunteer.Id)
             {
-                throw new InvalidOperationException("Mã sinh viên đã tồn tại.");
+                if (existingWithCode.UserId.HasValue && existingWithCode.UserId.Value != userId)
+                {
+                    throw new InvalidOperationException("Mã số sinh viên này đã được liên kết với một tài khoản khác. Vui lòng liên hệ ban quản trị Đoàn trường nếu có nhầm lẫn.");
+                }
+
+                if (!existingWithCode.UserId.HasValue)
+                {
+                    volunteer.InheritFromImportedRecord(existingWithCode);
+                    volunteerRepository.Delete(existingWithCode);
+                }
             }
-            volunteer.StudentCode = request.StudentCode;
-        }
-        volunteer.StudentCode = request.StudentCode?.Trim();
 
-        if (request.ConsentFaceAuth && !volunteer.ConsentFaceAuth)
-        {
-            volunteer.ConsentGivenAt = DateTimeOffset.UtcNow;
-        } else if (!request.ConsentFaceAuth)
-        {
-            volunteer.ConsentGivenAt = null;
+            volunteer.StudentCode = trimmedCode;
         }
 
-        volunteer.ConsentFaceAuth = request.ConsentFaceAuth;
-        volunteer.UpdatedAt = DateTimeOffset.UtcNow;
+        volunteer.ApplyFaceBiometricConsent(request.ConsentFaceAuth, DateTimeOffset.UtcNow);
 
         volunteerRepository.Update(volunteer);
         await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -4,6 +4,7 @@ export interface UserInfo {
   id: string;
   email: string;
   username: string;
+  avatarUrl?: string;
   roles: string[];
   organizationId?: string;
   organizationName: string;

@@ -15,5 +15,6 @@ public record ActivityDto(
     decimal CreditDays,
     string Status,
     Guid CreatedBy,
+    int RegisteredCount,
     List<ActivityLocationDto> Locations
 );
