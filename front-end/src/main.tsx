@@ -6,14 +6,17 @@ import App from "./App.tsx";
 import { AuthProvider } from "@/context/AuthContext.tsx";
 import { Toaster } from "@/components/ui/toaster.tsx";
 import { UiProvider } from "./lib/ui-config.tsx";
+import { ConfirmProvider } from "@/components/ui/alert-dialog.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
         <UiProvider>
-          <App />
-          <Toaster />
+          <ConfirmProvider>
+            <App />
+            <Toaster />
+          </ConfirmProvider>
         </UiProvider>
       </AuthProvider>
     </BrowserRouter>

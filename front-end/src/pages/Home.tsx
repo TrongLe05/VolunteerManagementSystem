@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Compass, Loader2 } from "lucide-react";
+import { useSearchParams } from "react-router";
+import { Compass } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
 import { activityApi } from "@/api/activityApi";
@@ -14,7 +15,11 @@ import type {
   VolunteerProfile,
 } from "@/types/volunteer.types";
 import { ActivityPostCard } from "@/components/feed/ActivityPostCard";
-import { FeedFilterBar } from "@/components/feed/FeedFilterBar";
+import { VolunteerStoriesBar } from "@/components/feed/VolunteerStoriesBar";
+import {
+  ActivityPostCardSkeleton,
+  VolunteerStoriesSkeleton,
+} from "@/components/common/Skeletons";
 import { FeedLeftSidebar } from "@/components/feed/FeedLeftSidebar";
 import { FeedRightSidebar } from "@/components/feed/FeedRightSidebar";
 import { GuestHeroBanner } from "@/components/feed/GuestHeroBanner";
@@ -34,7 +39,8 @@ export default function Home() {
   const [profile, setProfile] = useState<VolunteerProfile | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchTerm = searchParams.get("q") || "";
   const [selectedOrgId, setSelectedOrgId] = useState<string | null>(null);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
     null,
@@ -125,7 +131,9 @@ export default function Home() {
   );
 
   const resetFilters = () => {
-    setSearchTerm("");
+    const next = new URLSearchParams(searchParams);
+    next.delete("q");
+    setSearchParams(next, { replace: true });
     setSelectedOrgId(null);
     setSelectedCampaignId(null);
     setSelectedStatus(null);
@@ -141,8 +149,8 @@ export default function Home() {
         />
       )}
 
-      <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <div className="mx-auto max-w-8xl px-4 pt-6 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-x-10">
           <FeedLeftSidebar
             isAuthenticated={isAuthenticated}
             isVolunteer={isVolunteer}
@@ -156,28 +164,43 @@ export default function Home() {
           />
 
           <section className="space-y-4 lg:col-span-6">
-            <FeedFilterBar
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedStatus={selectedStatus}
-              onStatusChange={setSelectedStatus}
-              campaigns={campaigns}
-              selectedCampaignId={selectedCampaignId}
-              onSelectCampaign={setSelectedCampaignId}
-              hasActiveFilters={hasActiveFilters}
-              onResetFilters={resetFilters}
-              onRefresh={fetchFeedData}
-            />
+            {/* Thanh Story hoạt động tình nguyện phong cách Facebook */}
+            {!searchTerm && (
+              isLoading ? (
+                <VolunteerStoriesSkeleton />
+              ) : activities.length > 0 ? (
+                <VolunteerStoriesBar activities={activities} />
+              ) : null
+            )}
+
+            {searchTerm && (
+              <div className="flex items-center justify-between rounded-xl border border-blue-200/80 bg-blue-50/70 px-4 py-2.5 text-xs text-blue-900 shadow-2xs">
+                <span>
+                  Kết quả tìm kiếm cho từ khóa:{" "}
+                  <strong className="font-semibold text-blue-950">
+                    "{searchTerm}"
+                  </strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = new URLSearchParams(searchParams);
+                    next.delete("q");
+                    setSearchParams(next, { replace: true });
+                  }}
+                  className="font-medium text-blue-700 hover:underline cursor-pointer"
+                >
+                  Xóa bộ lọc tìm kiếm
+                </button>
+              </div>
+            )}
 
             {isLoading ? (
-              <Card className="border-slate-200 bg-white py-16">
-                <CardContent className="flex flex-col items-center justify-center gap-3 text-center">
-                  <Loader2 className="size-8 animate-spin text-blue-600" />
-                  <p className="text-sm text-muted-foreground">
-                    Đang tải bảng tin hoạt động tình nguyện...
-                  </p>
-                </CardContent>
-              </Card>
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <ActivityPostCardSkeleton key={i} />
+                ))}
+              </div>
             ) : activities.length > 0 ? (
               <div className="space-y-4">
                 {activities.map((activity) => (
@@ -221,6 +244,7 @@ export default function Home() {
             campaigns={campaigns}
             selectedCampaignId={selectedCampaignId}
             onSelectCampaign={setSelectedCampaignId}
+            isLoading={isLoading}
           />
         </div>
       </div>

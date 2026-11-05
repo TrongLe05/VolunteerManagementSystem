@@ -37,6 +37,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PageHead } from "@/components/blocks/shell/page-chrome";
 import { toast } from "@/components/ui/toaster";
+import { ProfileSkeleton } from "@/components/common/Skeletons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -156,8 +157,12 @@ export function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-72 items-center justify-center">
-        <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      <div className="container mx-auto max-w-4xl py-6 px-4 space-y-6">
+        <PageHead
+          title="Hồ sơ Tài khoản Sinh viên"
+          description="Quản lý thông tin định danh, MSSV và liên kết hồ sơ Đoàn trường"
+        />
+        <ProfileSkeleton />
       </div>
     );
   }

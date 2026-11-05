@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Common.Interfaces.Repositories;
@@ -47,7 +47,24 @@ public class GetMyActivityRegistrationsQueryHandler(
                 r.Activity.Status,
                 r.Status,
                 r.RegisteredAt,
-                r.ApprovedAt
+                r.ApprovedAt,
+                r.Attendances
+                    .OrderBy(a => a.AttendedAt)
+                    .Select(a => new MyAttendanceRecordDto(
+                        a.Id,
+                        a.AttendanceSession.Type,
+                        a.AttendedAt,
+                        a.LocationStatus,
+                        a.LocationAccuracyMeters,
+                        a.VerificationMethod,
+                        a.FaceSimilarity,
+                        a.IsLivenessVerified,
+                        a.CapturedImageUrl,
+                        a.Status,
+                        a.CreditEarned,
+                        a.Note
+                    ))
+                    .ToList()
             ))
             .ToListAsync(cancellationToken);
 

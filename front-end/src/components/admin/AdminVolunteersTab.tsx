@@ -3,7 +3,6 @@ import axios from "axios";
 import {
   Download,
   FileSpreadsheet,
-  Loader2,
   ShieldAlert,
   ShieldCheck,
 } from "lucide-react";
@@ -36,6 +35,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { PageHead } from "@/components/blocks/shell/page-chrome";
 import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 import { toast } from "@/components/ui/toaster";
+import { AdminTableRowSkeleton } from "@/components/common/Skeletons";
 
 interface AdminVolunteersTabProps {
   organizations: Organization[];
@@ -235,14 +235,7 @@ export function AdminVolunteersTab({
             </Combobox>
           </div>
 
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-2">
-              <Loader2 className="size-8 animate-spin text-primary" />
-              <p className="text-xs text-muted-foreground">
-                Đang tải danh sách tình nguyện viên...
-              </p>
-            </div>
-          ) : volunteers.length === 0 ? (
+          {!isLoading && volunteers.length === 0 ? (
             <EmptyState
               title="Chưa có tình nguyện viên nào"
               description="Không tìm thấy hồ sơ phù hợp với bộ lọc tìm kiếm. Bạn có thể Import danh sách sinh viên từ file Excel."
@@ -267,59 +260,63 @@ export function AdminVolunteersTab({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {volunteers.map((vol) => (
-                    <TableRow key={vol.id}>
-                      <TableCell className="font-mono text-xs font-semibold text-primary">
-                        {vol.volunteerCode}
-                      </TableCell>
-                      <TableCell className="font-semibold text-foreground">
-                        <div>{vol.fullName}</div>
-                        {vol.phone && (
-                          <div className="text-xs font-normal text-muted-foreground">
-                            {vol.phone}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        <div className="font-medium text-foreground">
-                          {vol.studentCode || (
-                            <span className="text-warning font-normal italic">
-                              Chưa có MSSV
-                            </span>
+                  {isLoading ? (
+                    <AdminTableRowSkeleton columns={6} rows={5} />
+                  ) : (
+                    volunteers.map((vol) => (
+                      <TableRow key={vol.id}>
+                        <TableCell className="font-mono text-xs font-semibold text-primary">
+                          {vol.volunteerCode}
+                        </TableCell>
+                        <TableCell className="font-semibold text-foreground">
+                          <div>{vol.fullName}</div>
+                          {vol.phone && (
+                            <div className="text-xs font-normal text-muted-foreground">
+                              {vol.phone}
+                            </div>
                           )}
-                        </div>
-                        <div className="text-muted-foreground">
-                          {vol.className || "—"}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-xs max-w-48 truncate">
-                        {vol.organizationName}
-                      </TableCell>
-                      <TableCell>
-                        {vol.userId ? (
-                          <Badge variant="success">Đã liên kết</Badge>
-                        ) : (
-                          <Badge variant="warning">Chờ SV cập nhật</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {vol.consentFaceAuth ? (
-                          <Badge variant="success" className="gap-1">
-                            <ShieldCheck className="size-3" />
-                            Đã đồng ý NĐ13
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="secondary"
-                            className="gap-1 text-muted-foreground"
-                          >
-                            <ShieldAlert className="size-3" />
-                            Chưa đồng ý
-                          </Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          <div className="font-medium text-foreground">
+                            {vol.studentCode || (
+                              <span className="text-warning font-normal italic">
+                                Chưa có MSSV
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-muted-foreground">
+                            {vol.className || "—"}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs max-w-48 truncate">
+                          {vol.organizationName}
+                        </TableCell>
+                        <TableCell>
+                          {vol.userId ? (
+                            <Badge variant="success">Đã liên kết</Badge>
+                          ) : (
+                            <Badge variant="warning">Chờ SV cập nhật</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {vol.consentFaceAuth ? (
+                            <Badge variant="success" className="gap-1">
+                              <ShieldCheck className="size-3" />
+                              Đã đồng ý NĐ13
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="secondary"
+                              className="gap-1 text-muted-foreground"
+                            >
+                              <ShieldAlert className="size-3" />
+                              Chưa đồng ý
+                            </Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </div>

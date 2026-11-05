@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
-import { CalendarHeart, Loader2, RefreshCw, Search } from "lucide-react";
+import { CalendarHeart, Flag, RefreshCw, Search } from "lucide-react";
 
 import { useAuth } from "@/context/AuthContext";
 import { activityApi } from "@/api/activityApi";
@@ -13,6 +13,7 @@ import type {
   MyActivityRegistration,
 } from "@/types/volunteer.types";
 import { ActivityPostCard } from "@/components/feed/ActivityPostCard";
+import { ActivityPostCardSkeleton } from "@/components/common/Skeletons";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -176,6 +177,62 @@ export function ActivitiesPage() {
           </Button>
         </div>
 
+        {/* Thanh lọc nhanh theo Chiến dịch Đoàn - Hội */}
+        {campaigns.length > 0 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <span className="text-xs font-semibold text-slate-500 shrink-0 flex items-center gap-1.5 mr-1">
+              <Flag className="size-3.5 text-blue-600" />
+              Chiến dịch:
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCampaignId("");
+                setPageNumber(1);
+                setSearchParams((prev) => {
+                  const next = new URLSearchParams(prev);
+                  next.delete("campaignId");
+                  return next;
+                });
+              }}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                !selectedCampaignId
+                  ? "bg-blue-600 text-white shadow-2xs"
+                  : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+              }`}
+            >
+              Tất cả hoạt động
+            </button>
+            {campaigns.map((camp) => {
+              const isSelected = selectedCampaignId === camp.id;
+              return (
+                <button
+                  key={camp.id}
+                  type="button"
+                  onClick={() => {
+                    const newId = isSelected ? "" : camp.id;
+                    setSelectedCampaignId(newId);
+                    setPageNumber(1);
+                    setSearchParams((prev) => {
+                      const next = new URLSearchParams(prev);
+                      if (newId) next.set("campaignId", newId);
+                      else next.delete("campaignId");
+                      return next;
+                    });
+                  }}
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-all shrink-0 cursor-pointer ${
+                    isSelected
+                      ? "bg-blue-600 text-white shadow-2xs font-semibold ring-2 ring-blue-400/40"
+                      : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                  }`}
+                >
+                  {camp.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* Bộ lọc đa tiêu chí bằng Combobox shadcn/ui */}
         <Card className="border-slate-200 bg-white">
           <CardContent className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -296,16 +353,13 @@ export function ActivitiesPage() {
           </CardContent>
         </Card>
 
-        {/* Lưới danh sách Hoạt động (2 cột trên Desktop) */}
+        {/* Lưới danh sách Hoạt động */}
         {isLoading ? (
-          <Card className="border-slate-200 bg-white py-16">
-            <CardContent className="flex flex-col items-center justify-center gap-3">
-              <Loader2 className="size-8 animate-spin text-blue-600" />
-              <p className="text-sm text-muted-foreground">
-                Đang tải danh sách hoạt động...
-              </p>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <ActivityPostCardSkeleton key={i} />
+            ))}
+          </div>
         ) : activities.length > 0 ? (
           <>
             <div className="grid grid-cols-1 gap-6">

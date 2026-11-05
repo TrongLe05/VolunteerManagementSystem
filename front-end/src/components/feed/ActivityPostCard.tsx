@@ -5,11 +5,9 @@ import {
   Award,
   Calendar,
   CheckCircle2,
-  Clock,
   Flag,
   Info,
   MapPin,
-  Sparkles,
   Users,
   XCircle,
 } from "lucide-react";
@@ -33,7 +31,23 @@ import {
 } from "@/components/ui/card";
 import { toast } from "@/components/ui/toaster";
 import huyHieuDoan from "@/assets/HuyHieuDoan.png";
+import authBanner from "@/assets/auth-banner.jpg";
 import { Progress } from "@/components/ui/progress";
+
+const DEFAULT_ACTIVITY_IMAGES = [
+  authBanner,
+  // "https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&w=1000&q=80",
+  // "https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&w=1000&q=80",
+  // "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1000&q=80",
+];
+
+function getActivityCoverImage(activity: Activity): string {
+  if (activity.imageUrl) return activity.imageUrl;
+  const hash = (activity.id || "")
+    .split("")
+    .reduce((acc, c) => acc + c.charCodeAt(0), 0);
+  return DEFAULT_ACTIVITY_IMAGES[hash % DEFAULT_ACTIVITY_IMAGES.length];
+}
 
 interface ActivityPostCardProps {
   activity: Activity;
@@ -66,6 +80,7 @@ export function ActivityPostCard({
   const statusConfig = getActivityStatusConfig(activity.status);
   const regBadge = getRegistrationStatusBadge(registrationStatus);
   const primaryLocation = activity.locations?.[0];
+  const coverImage = getActivityCoverImage(activity);
 
   const isStarted = new Date() >= new Date(activity.startTime);
 
@@ -150,7 +165,7 @@ export function ActivityPostCard({
 
   return (
     <>
-      <Card className="overflow-hidden border-slate-200/90 bg-white shadow-xs transition-shadow hover:shadow-md">
+      <Card className="overflow-hidden border-slate-200/90 bg-white shadow-xs transition-shadow ">
         <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
           <div className="flex items-start gap-3">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-full border border-blue-100 bg-blue-50 p-1.5 shadow-2xs">
@@ -207,81 +222,108 @@ export function ActivityPostCard({
             )}
           </div>
 
-          <div className="relative overflow-hidden rounded-xl border border-blue-100 bg-linear-to-br from-blue-600 via-blue-700 to-indigo-800 p-4 sm:p-5 text-white shadow-inner">
-            <div className="relative z-10 flex flex-col gap-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-medium backdrop-blur-xs">
-                  <Sparkles className="size-3.5 text-amber-300" />
-                  Điểm danh thông minh GPS & AI FaceID
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/20 border border-amber-300/40 px-2.5 py-0.5 text-xs font-semibold text-amber-200">
-                  <Award className="size-3.5" />+{activity.creditDays} ngày (
-                  {activity.creditHours} giờ)
-                </span>
+          {/* Hình ảnh hoạt động (Banner / Cover) */}
+          <div className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-slate-100 group">
+            <Link to={`/activities/${activity.id}`} className="block">
+              <div className="aspect-[16/9] w-full overflow-hidden bg-slate-100">
+                <img
+                  src={coverImage}
+                  alt={activity.name}
+                  className="size-full object-cover"
+                  loading="lazy"
+                />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-xs sm:text-sm">
-                <div className="flex items-start gap-2 rounded-lg bg-black/20 p-2.5 backdrop-blur-xs">
-                  <Calendar className="size-4 shrink-0 text-blue-200 mt-0.5" />
-                  <div>
-                    <p className="text-[11px] text-blue-200">
-                      Thời gian diễn ra
-                    </p>
-                    <p className="font-semibold">
-                      {formatDateTimeVN(activity.startTime)}
-                    </p>
-                    <p className="text-[11px] text-white/80">
-                      đến {formatDateTimeVN(activity.endTime)}
-                    </p>
-                  </div>
+              {/* Lớp gradient overlay và huy hiệu trên ảnh */}
+              <div className="absolute inset-0 bg-linear-to-t from-slate-950/75 via-transparent to-black/20 pointer-events-none" />
+
+              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white pointer-events-none">
+                <div className="flex items-center gap-1.5 text-xs text-white/95">
+                  <MapPin className="size-3.5 text-rose-400 shrink-0" />
+                  <span className="truncate max-w-[200px] sm:max-w-xs font-medium">
+                    {primaryLocation
+                      ? primaryLocation.name
+                      : "Khuôn viên Trường ĐH Đồng Tháp"}
+                  </span>
                 </div>
 
-                <div className="flex items-start gap-2 rounded-lg bg-black/20 p-2.5 backdrop-blur-xs">
-                  <MapPin className="size-4 shrink-0 text-rose-300 mt-0.5" />
-                  <div className="min-w-0">
-                    <p className="text-[11px] text-blue-200">
-                      Địa điểm tập kết (Geofence)
-                    </p>
-                    <p className="font-semibold truncate">
-                      {primaryLocation
-                        ? primaryLocation.name
-                        : "Khuôn viên Trường ĐH Đồng Tháp"}
-                    </p>
-                    <p className="text-[11px] text-white/80 truncate">
-                      {primaryLocation
-                        ? `Bán kính điểm danh: ${primaryLocation.allowedRadiusMeters}m`
-                        : "Xem chi tiết vị trí trên bản đồ"}
-                    </p>
-                  </div>
+                {(activity.creditDays > 0 || activity.creditHours > 0) && (
+                  <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-amber-500/90 backdrop-blur-md px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                    <Award className="size-3.5" />+
+                    {activity.creditDays > 0
+                      ? `${activity.creditDays} ngày`
+                      : ""}
+                    {activity.creditDays > 0 &&
+                      activity.creditHours > 0 &&
+                      " • "}
+                    {activity.creditHours > 0 ? `${activity.creditHours}h` : ""}
+                  </span>
+                )}
+              </div>
+            </Link>
+          </div>
+
+          {/* Khối thông tin thời gian & địa điểm điểm danh (nằm phía dưới ảnh) */}
+          <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 space-y-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div className="flex items-start gap-2.5 rounded-lg border border-slate-200/70 bg-white p-2.5 shadow-2xs">
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-blue-50 text-blue-600 mt-0.5">
+                  <Calendar className="size-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium text-slate-500">
+                    Thời gian diễn ra
+                  </p>
+                  <p className="font-semibold text-slate-800 truncate">
+                    {formatDateTimeVN(activity.startTime)}
+                  </p>
+                  <p className="text-[11px] text-slate-500 truncate">
+                    đến {formatDateTimeVN(activity.endTime)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5 rounded-lg border border-slate-200/70 bg-white p-2.5 shadow-2xs">
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-rose-50 text-rose-600 mt-0.5">
+                  <MapPin className="size-3.5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium text-slate-500">
+                    Địa điểm tập kết (Geofence)
+                  </p>
+                  <p
+                    className="font-semibold text-slate-800 truncate"
+                    title={primaryLocation?.name}
+                  >
+                    {primaryLocation
+                      ? primaryLocation.name
+                      : "Khuôn viên Trường ĐH Đồng Tháp"}
+                  </p>
+                  <p className="text-[11px] text-blue-700 font-medium truncate">
+                    {primaryLocation
+                      ? `Bán kính: ${primaryLocation.allowedRadiusMeters}m`
+                      : "Xem chi tiết vị trí"}
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-muted-foreground">
-            <div className="flex flex-col items-start gap-4">
-              <span className="inline-flex items-center gap-1.5">
-                <Calendar className="size-3.5 " />
-                {formatDateTimeVN(activity.startTime)}
-              </span>
+          {/* Chỉ tiêu & Tiến độ đăng ký */}
+          <div className="space-y-2 pt-1">
+            <div className="flex items-center justify-between text-xs">
               <span className="inline-flex items-center gap-1.5 font-medium text-slate-700">
-                <Users className="size-4 " />
-                Chỉ tiêu:{" "}
-                <strong>
-                  {activity.capacity
-                    ? `${activity.capacity} TNV`
-                    : "Không giới hạn"}
-                </strong>
+                <Users className="size-3.5 text-slate-500" />
+                Chỉ tiêu tuyển chọn:
               </span>
-            </div>
-            <div className="flex flex-col items-start gap-4">
-              <span className="inline-flex items-center gap-1.5">
-                <MapPin className="size-3.5 " />
-                {primaryLocation.address}
-              </span>
-              <span className="inline-flex items-center gap-1 font-medium ">
-                <Clock className="size-3.5" />
-                Tích lũy {activity.creditHours} giờ tình nguyện
+              <span className="text-slate-900">
+                <strong className="text-blue-700">
+                  {activity.registeredCount}
+                </strong>{" "}
+                /{" "}
+                {activity.capacity
+                  ? `${activity.capacity} TNV`
+                  : "Không giới hạn"}
               </span>
             </div>
 
@@ -292,6 +334,7 @@ export function ActivityPostCard({
                 activity.capacity,
               )}
               max={activity.capacity || 100}
+              className="h-2 bg-slate-100"
             />
           </div>
         </CardContent>

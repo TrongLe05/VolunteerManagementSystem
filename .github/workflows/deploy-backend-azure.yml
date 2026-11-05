@@ -32,7 +32,7 @@ jobs:
         run: dotnet test back-end/VolunteerManagerment/VolunteerManagerment.Tests/VolunteerManagerment.Tests.csproj --configuration Release --verbosity normal
 
       - name: Publish .NET API
-        run: dotnet publish back-end/VolunteerManagerment/VolunteerManagerment.API/VolunteerManagerment.API.csproj --configuration Release --no-restore -o ./publish
+        run: dotnet publish back-end/VolunteerManagerment/VolunteerManagerment.API/VolunteerManagerment.API.csproj --configuration Release -r linux-x64 --self-contained true -o ./publish
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
