@@ -89,20 +89,10 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        if (builder.Environment.IsDevelopment())
-        {
-            policy.SetIsOriginAllowed(_ => true)
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials();
-        }
-        else
-        {
-            policy.WithOrigins("http://localhost:5173")
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials();
-        }
+        policy.SetIsOriginAllowed(_ => true)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -110,25 +100,30 @@ var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Configure OpenAPI & Scalar API Reference (bật cả trong Production để giảng viên & tester tra cứu API)
+app.MapOpenApi();
+app.MapScalarApiReference(options =>
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference(options =>
-    {
-        options.WithTitle("Volunteer Management API");
-    });
-}
-else
-{
-    app.UseHttpsRedirection();
-}
+    options.WithTitle("Hệ thống Quản lý Tình nguyện viên DThU - API Docs");
+});
+
+app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+// Route chào mừng ở trang chủ domain
+app.MapGet("/", () => Results.Ok(new
+{
+    service = "Hệ thống Quản lý Tình nguyện viên DThU - Web API",
+    status = "Online",
+    docs = "/scalar/v1",
+    version = "1.0.0",
+    timestamp = DateTimeOffset.UtcNow
+}));
 
 app.MapControllers();
 
