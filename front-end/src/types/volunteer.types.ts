@@ -88,6 +88,7 @@ export interface Activity {
   createdBy: string;
   registeredCount: number;
   locations: ActivityLocation[];
+  imageUrl?: string | null;
 }
 
 export interface CreateActivityRequest {
@@ -122,6 +123,21 @@ export type RegistrationStatus =
   | "REJECTED"
   | "CANCELLED";
 
+export interface MyAttendanceRecord {
+  id: string;
+  sessionType: "CHECK_IN" | "CHECK_OUT" | string;
+  attendedAt: string;
+  locationStatus: string;
+  locationAccuracyMeters?: number | null;
+  verificationMethod: string;
+  faceSimilarity?: number | null;
+  isLivenessVerified: boolean;
+  capturedImageUrl?: string | null;
+  status: string;
+  creditEarned: number;
+  note?: string | null;
+}
+
 export interface MyActivityRegistration {
   registrationId: string;
   activityId: string;
@@ -136,6 +152,7 @@ export interface MyActivityRegistration {
   registrationStatus: RegistrationStatus | string;
   registeredAt: string;
   approveAt: string | null;
+  attendances?: MyAttendanceRecord[];
 }
 
 export interface ActivityRegistrationItem {

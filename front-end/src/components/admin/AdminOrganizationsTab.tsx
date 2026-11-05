@@ -36,19 +36,24 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toaster";
+import { ConfirmDialog } from "@/components/ui/alert-dialog";
+import { AdminTableRowSkeleton } from "@/components/common/Skeletons";
 
 interface AdminOrganizationsTabProps {
   organizations: Organization[];
+  isLoading?: boolean;
   onRefresh: () => void;
 }
 
 export function AdminOrganizationsTab({
   organizations,
+  isLoading = false,
   onRefresh,
 }: AdminOrganizationsTabProps) {
   const { user } = useAuth();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
+  const [deletingOrg, setDeletingOrg] = useState<Organization | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [parentOrg, setParentOrg] = useState<Organization | null>(null);
@@ -123,12 +128,14 @@ export function AdminOrganizationsTab({
     }
   };
 
-  const handleDelete = async (org: Organization) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa đơn vị "${org.name}"?`)) {
-      return;
-    }
+  const handleDelete = (org: Organization) => {
+    setDeletingOrg(org);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingOrg) return;
     try {
-      await toast.promise(organizationApi.remove(org.id), {
+      await toast.promise(organizationApi.remove(deletingOrg.id), {
         loading: "Đang xóa đơn vị...",
         success: "Đã xóa đơn vị.",
         error: (err) =>
@@ -138,6 +145,7 @@ export function AdminOrganizationsTab({
               "Không thể xóa đơn vị (đang có đơn vị con hoặc dữ liệu ràng buộc)."
             : "Lỗi kết nối máy chủ.",
       });
+      setDeletingOrg(null);
       onRefresh();
     } catch {
       // Handled
@@ -180,7 +188,9 @@ export function AdminOrganizationsTab({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {organizations.length > 0 ? (
+                {isLoading ? (
+                  <AdminTableRowSkeleton columns={5} rows={4} />
+                ) : organizations.length > 0 ? (
                   organizations.map((org) => (
                     <TableRow key={org.id}>
                       <TableCell className="font-mono text-xs font-semibold text-blue-700">
@@ -341,6 +351,22 @@ export function AdminOrganizationsTab({
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Hộp thoại xác nhận xóa chuẩn AlertDialog của dthu-kit */}
+      <ConfirmDialog
+        open={Boolean(deletingOrg)}
+        onOpenChange={(open) => !open && setDeletingOrg(null)}
+        title="Xác nhận xóa đơn vị?"
+        description={
+          deletingOrg
+            ? `Bạn có chắc muốn xóa đơn vị "${deletingOrg.name}"? Hành động này sẽ xóa dữ liệu đơn vị khỏi cây tổ chức và không thể hoàn tác.`
+            : undefined
+        }
+        confirmLabel="Xóa đơn vị"
+        cancelLabel="Hủy"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
+      />
     </>
   );
 }

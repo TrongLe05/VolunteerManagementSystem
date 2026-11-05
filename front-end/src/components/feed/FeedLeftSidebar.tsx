@@ -7,9 +7,8 @@ import {
   ClipboardCheck,
   GraduationCap,
   Hash,
-  Settings,
 } from "lucide-react";
-import type { Organization, UserInfo } from "@/types/auth.types";
+import type { UserInfo } from "@/types/auth.types";
 import type { VolunteerProfile } from "@/types/volunteer.types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,9 +29,9 @@ interface FeedLeftSidebarProps {
   profile: VolunteerProfile | null;
   totalDays: number;
   totalRegistered: number;
-  organizations: Organization[];
-  selectedOrgId: string | null;
-  onSelectOrg: (orgId: string | null) => void;
+  organizations?: unknown;
+  selectedOrgId?: string | null;
+  onSelectOrg?: (orgId: string | null) => void;
 }
 
 export function FeedLeftSidebar({
@@ -42,9 +41,6 @@ export function FeedLeftSidebar({
   profile,
   totalDays,
   totalRegistered,
-  organizations,
-  selectedOrgId,
-  onSelectOrg,
 }: FeedLeftSidebarProps) {
   const displayName = profile?.fullName || user?.username || "Tình nguyện viên";
   const initials =
@@ -88,53 +84,76 @@ export function FeedLeftSidebar({
                 </div>
 
                 <Button
-                  variant="ghost"
-                  size="sm"
                   asChild
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-blue-600 gap-1 rounded-lg"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full border-slate-200 text-xs font-semibold hover:border-blue-400 hover:text-blue-600 shadow-2xs"
                 >
-                  <Link to="/profile">
-                    <Settings className="size-3.5" />
-                    <span>Hồ sơ</span>
-                  </Link>
+                  <Link to="/profile">Hồ sơ cá nhân</Link>
                 </Button>
               </div>
 
-              {/* Thông tin Họ tên, MSSV và Lớp học */}
-              <div className="space-y-1.5">
-                <h3 className="font-bold text-slate-900 text-base leading-tight truncate">
+              {/* Thông tin tên và vai trò */}
+              <div>
+                <h3 className="font-bold text-slate-900 text-base leading-snug truncate">
                   {displayName}
                 </h3>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user?.email || "Sinh viên Đại học Đồng Tháp"}
+                </p>
 
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {profile?.studentCode ? (
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  <Badge
+                    variant="secondary"
+                    className="rounded-full bg-blue-50 text-[11px] font-semibold text-blue-700 border border-blue-200/60"
+                  >
+                    {isVolunteer ? "Đoàn viên - TNV" : "Cán bộ quản lý"}
+                  </Badge>
+                  {profile?.organizationName && (
                     <Badge
                       variant="outline"
-                      className="bg-slate-50 text-[11px] font-medium text-slate-700 border-slate-200 px-2 py-0.5 gap-1"
+                      className="rounded-full text-[11px] font-normal text-slate-600 border-slate-200"
                     >
-                      <Hash className="size-3 text-slate-400" />
-                      {profile.studentCode}
-                    </Badge>
-                  ) : (
-                    <span className="text-xs text-muted-foreground truncate">
-                      {user?.email}
-                    </span>
-                  )}
-
-                  {profile?.className && (
-                    <Badge
-                      variant="outline"
-                      className="bg-blue-50/80 text-[11px] font-medium text-blue-700 border-blue-200/80 px-2 py-0.5 gap-1"
-                    >
-                      <GraduationCap className="size-3 text-blue-600" />
-                      {profile.className}
+                      {profile.organizationName}
                     </Badge>
                   )}
                 </div>
               </div>
 
-              {/* Hộp thông tin Đơn vị trực thuộc */}
-              <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-2.5 transition-colors">
+              {/* Chi tiết học tập & đơn vị */}
+              <div className="space-y-2 rounded-xl bg-slate-50/90 p-3 text-xs border border-slate-100">
+                {profile?.studentCode && (
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-white text-blue-600 shadow-2xs border border-slate-100">
+                      <Hash className="size-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                        Mã sinh viên
+                      </p>
+                      <p className="font-semibold text-slate-800">
+                        {profile.studentCode}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {profile?.className && (
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-white text-indigo-600 shadow-2xs border border-slate-100">
+                      <GraduationCap className="size-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                        Lớp sinh hoạt
+                      </p>
+                      <p className="font-semibold text-slate-800 truncate">
+                        {profile.className}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center gap-2.5">
                   <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700 shadow-2xs">
                     <Building2 className="size-3.5" />
@@ -241,44 +260,6 @@ export function FeedLeftSidebar({
             </CardContent>
           </Card>
         )}
-
-        <Card className="border-slate-200 bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-bold">
-              <Building2 className="size-4 text-blue-600" />
-              Đơn vị Đoàn - Hội ({organizations.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1 max-h-80 overflow-y-auto">
-            <button
-              type="button"
-              onClick={() => onSelectOrg(null)}
-              className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs font-medium transition-colors ${
-                selectedOrgId === null
-                  ? "bg-blue-50 text-blue-700 font-semibold"
-                  : "text-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              <span>Tất cả đơn vị</span>
-            </button>
-            {organizations.map((org) => (
-              <button
-                key={org.id}
-                type="button"
-                onClick={() =>
-                  onSelectOrg(selectedOrgId === org.id ? null : org.id)
-                }
-                className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition-colors ${
-                  selectedOrgId === org.id
-                    ? "bg-blue-50 text-blue-700 font-semibold"
-                    : "text-slate-700 hover:bg-slate-100"
-                }`}
-              >
-                <span className="truncate">{org.name}</span>
-              </button>
-            ))}
-          </CardContent>
-        </Card>
       </div>
     </aside>
   );

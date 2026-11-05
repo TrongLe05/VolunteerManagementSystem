@@ -47,11 +47,14 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toaster";
+import { ConfirmDialog } from "@/components/ui/alert-dialog";
+import { AdminTableRowSkeleton } from "@/components/common/Skeletons";
 
 interface AdminActivitiesTabProps {
   activities: Activity[];
   campaigns: Campaign[];
   onRefresh: () => void;
+  isLoading?: boolean;
 }
 
 interface StatusOption {
@@ -87,11 +90,13 @@ export function AdminActivitiesTab({
   activities,
   campaigns,
   onRefresh,
+  isLoading = false,
 }: AdminActivitiesTabProps) {
   const navigate = useNavigate();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [reviewActivity, setReviewActivity] = useState<Activity | null>(null);
+  const [deletingActivity, setDeletingActivity] = useState<Activity | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
@@ -258,12 +263,14 @@ export function AdminActivitiesTab({
     }
   };
 
-  const handleDelete = async (act: Activity) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa hoạt động "${act.name}"?`)) {
-      return;
-    }
+  const handleDelete = (act: Activity) => {
+    setDeletingActivity(act);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingActivity) return;
     try {
-      await toast.promise(activityApi.remove(act.id), {
+      await toast.promise(activityApi.remove(deletingActivity.id), {
         loading: "Đang xóa hoạt động...",
         success: "Đã xóa hoạt động.",
         error: (err) =>
@@ -273,6 +280,7 @@ export function AdminActivitiesTab({
               "Không thể xóa hoạt động (chỉ xóa được khi chưa có dữ liệu ràng buộc)."
             : "Lỗi kết nối máy chủ.",
       });
+      setDeletingActivity(null);
       onRefresh();
     } catch {
       // Handled
@@ -316,7 +324,9 @@ export function AdminActivitiesTab({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {activities.length > 0 ? (
+                {isLoading ? (
+                  <AdminTableRowSkeleton columns={6} />
+                ) : activities.length > 0 ? (
                   activities.map((act) => {
                     const statusCfg = getActivityStatusConfig(act.status);
                     return (
@@ -613,6 +623,22 @@ export function AdminActivitiesTab({
             onRefresh();
           }
         }}
+      />
+
+      {/* Hộp thoại xác nhận xóa chuẩn AlertDialog của dthu-kit */}
+      <ConfirmDialog
+        open={Boolean(deletingActivity)}
+        onOpenChange={(open) => !open && setDeletingActivity(null)}
+        title="Xác nhận xóa hoạt động?"
+        description={
+          deletingActivity
+            ? `Bạn có chắc chắn muốn xóa hoạt động "${deletingActivity.name}"? Thao tác này sẽ xóa vĩnh viễn và không thể hoàn tác.`
+            : undefined
+        }
+        confirmLabel="Xóa hoạt động"
+        cancelLabel="Hủy"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
       />
     </>
   );

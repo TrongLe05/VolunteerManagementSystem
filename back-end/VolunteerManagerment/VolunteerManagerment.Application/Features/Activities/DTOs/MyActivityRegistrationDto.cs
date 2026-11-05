@@ -1,4 +1,19 @@
-﻿namespace VolunteerManagerment.Application.Features.Activities.DTOs;
+namespace VolunteerManagerment.Application.Features.Activities.DTOs;
+
+public record MyAttendanceRecordDto(
+    Guid Id,
+    string SessionType,
+    DateTimeOffset AttendedAt,
+    string LocationStatus,
+    decimal? LocationAccuracyMeters,
+    string VerificationMethod,
+    decimal? FaceSimilarity,
+    bool IsLivenessVerified,
+    string? CapturedImageUrl,
+    string Status,
+    decimal CreditEarned,
+    string? Note
+);
 
 public record MyActivityRegistrationDto(
     Guid RegistrationId,
@@ -13,5 +28,6 @@ public record MyActivityRegistrationDto(
     string ActivityStatus,
     string RegistrationStatus,
     DateTimeOffset RegisteredAt,
-    DateTimeOffset? ApproveAt
+    DateTimeOffset? ApproveAt,
+    IReadOnlyList<MyAttendanceRecordDto> Attendances
 );

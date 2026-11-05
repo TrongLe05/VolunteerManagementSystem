@@ -1,0 +1,12 @@
+**/.git
+**/.github
+**/.vscode
+**/.idea
+**/bin
+**/obj
+**/node_modules
+front-end
+.orca
+brain
+tmp
+*.md

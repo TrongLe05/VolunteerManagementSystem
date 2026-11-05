@@ -1,9 +1,8 @@
 import { Login } from "@/pages/auth/LoginPage";
 import { RegisterPage } from "@/pages/auth/RegisterPage";
-import { Route, Routes } from "react-router";
+import { Navigate, Route, Routes } from "react-router";
 import Home from "./pages/Home";
 import { ActivitiesPage } from "./pages/ActivitiesPage";
-import { CampaignsPage } from "./pages/CampaignsPage";
 import { MyRegistrationsPage } from "./pages/MyRegistrationsPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { AdminLayout } from "./components/layout/admin/AdminLayout";
@@ -31,7 +30,7 @@ function App() {
           <Route index element={<ActivitiesPage />} />
           <Route path=":id" element={<DetailActivitiesPage />} />
         </Route>
-        <Route path="/campaigns" element={<CampaignsPage />} />
+        <Route path="/campaigns" element={<Navigate to="/activities" replace />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/my-registrations" element={<MyRegistrationsPage />} />
           <Route path="/profile" element={<ProfilePage />} />

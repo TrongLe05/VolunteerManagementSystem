@@ -9,8 +9,10 @@ import { AdminCampaignsTab } from "@/components/admin/AdminCampaignsTab";
 export function AdminCampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
+    setIsLoading(true);
     try {
       const [campRes, orgRes] = await Promise.all([
         campaignApi.getAll({ pageNumber: 1, pageSize: 100 }),
@@ -20,6 +22,8 @@ export function AdminCampaignsPage() {
       setOrganizations(orgRes || []);
     } catch {
       // Ignore
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -37,6 +41,7 @@ export function AdminCampaignsPage() {
       campaigns={campaigns}
       organizations={organizations}
       onRefresh={fetchData}
+      isLoading={isLoading}
     />
   );
 }

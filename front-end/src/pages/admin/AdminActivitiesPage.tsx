@@ -8,8 +8,10 @@ import { AdminActivitiesTab } from "@/components/admin/AdminActivitiesTab";
 export function AdminActivitiesPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
+    setIsLoading(true);
     try {
       const [actRes, campRes] = await Promise.all([
         activityApi.getAll({ pageNumber: 1, pageSize: 100 }),
@@ -19,6 +21,8 @@ export function AdminActivitiesPage() {
       setCampaigns(campRes.items || []);
     } catch {
       // Ignore
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -36,6 +40,7 @@ export function AdminActivitiesPage() {
       activities={activities}
       campaigns={campaigns}
       onRefresh={fetchData}
+      isLoading={isLoading}
     />
   );
 }

@@ -1,11 +1,13 @@
-import { useState } from "react";
-import { Link } from "react-router";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import {
   CircleUser,
   LayoutDashboard,
   LogOut,
   Menu,
+  Search,
   Settings,
+  X,
   type LucideIcon,
 } from "lucide-react";
 
@@ -25,6 +27,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import dthuLogo from "@/assets/DThU-Logo.png";
+import { Input } from "../ui/input";
 
 export interface NavItemConfig {
   to: string;
@@ -51,6 +54,26 @@ export function MobileNavSheet({
   onLogout,
 }: MobileNavSheetProps) {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const currentQuery = searchParams.get("q") || "";
+  const [mobileQuery, setMobileQuery] = useState(currentQuery);
+
+  useEffect(() => {
+    if (open) {
+      setMobileQuery(currentQuery);
+    }
+  }, [open, currentQuery]);
+
+  const handleMobileSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mobileQuery.trim()) {
+      navigate(`/?q=${encodeURIComponent(mobileQuery.trim())}`);
+    } else {
+      navigate("/");
+    }
+    setOpen(false);
+  };
   const initials = user?.username
     ? user.username.slice(0, 2).toUpperCase()
     : "TN";
@@ -122,6 +145,29 @@ export function MobileNavSheet({
               </div>
             </div>
           )}
+          {/* Ô tìm kiếm dành riêng cho Mobile Menu */}
+          <div className="px-1">
+            <form onSubmit={handleMobileSearch} className="relative">
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <Input
+                value={mobileQuery}
+                onChange={(e) => setMobileQuery(e.target.value)}
+                placeholder="Tìm kiếm hoạt động tình nguyện..."
+                className="h-10 w-full rounded-xl bg-slate-100 pl-9.5 pr-8 text-xs border-slate-200 focus-visible:bg-white focus-visible:ring-1 focus-visible:ring-blue-600 shadow-2xs"
+                type="search"
+              />
+              {mobileQuery && (
+                <button
+                  type="button"
+                  onClick={() => setMobileQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                  title="Xóa tìm kiếm"
+                >
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </form>
+          </div>
 
           {/* Danh mục điều hướng chính */}
           <div className="space-y-1">
@@ -194,18 +240,10 @@ export function MobileNavSheet({
         <SheetFooter className="border-t bg-slate-50/60 p-4">
           {!isAuthenticated ? (
             <div className="grid grid-cols-2 gap-2 w-full">
-              <Button
-                variant="outline"
-                asChild
-                onClick={() => setOpen(false)}
-              >
+              <Button variant="outline" asChild onClick={() => setOpen(false)}>
                 <Link to="/login">Đăng nhập</Link>
               </Button>
-              <Button
-                variant="default"
-                asChild
-                onClick={() => setOpen(false)}
-              >
+              <Button variant="default" asChild onClick={() => setOpen(false)}>
                 <Link to="/register">Đăng ký</Link>
               </Button>
             </div>

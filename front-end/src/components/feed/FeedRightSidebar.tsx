@@ -8,17 +8,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { FeedRightSidebarSkeleton } from "@/components/common/Skeletons";
 
 interface FeedRightSidebarProps {
   campaigns: Campaign[];
   selectedCampaignId: string | null;
   onSelectCampaign: (campaignId: string | null) => void;
+  isLoading?: boolean;
 }
 
 export function FeedRightSidebar({
   campaigns,
   selectedCampaignId,
   onSelectCampaign,
+  isLoading = false,
 }: FeedRightSidebarProps) {
   return (
     <aside className="hidden lg:block lg:col-span-3">
@@ -30,16 +33,28 @@ export function FeedRightSidebar({
                 <Flag className="size-4 text-blue-600" />
                 Chiến dịch Tình nguyện
               </CardTitle>
-              <Link
-                to="/campaigns"
-                className="text-xs font-medium text-blue-600 hover:underline"
-              >
-                Xem tất cả
-              </Link>
+              {selectedCampaignId ? (
+                <button
+                  type="button"
+                  onClick={() => onSelectCampaign(null)}
+                  className="text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
+                >
+                  Bỏ lọc
+                </button>
+              ) : (
+                <Link
+                  to="/activities"
+                  className="text-xs font-medium text-blue-600 hover:underline"
+                >
+                  Xem tất cả
+                </Link>
+              )}
             </div>
           </CardHeader>
           <CardContent className="space-y-2.5">
-            {campaigns.length > 0 ? (
+            {isLoading ? (
+              <FeedRightSidebarSkeleton />
+            ) : campaigns.length > 0 ? (
               campaigns.slice(0, 4).map((camp) => (
                 <div
                   key={camp.id}

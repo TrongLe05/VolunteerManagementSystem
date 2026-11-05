@@ -260,7 +260,8 @@ export const DetailActivitiesPage = () => {
           Không tìm thấy hoạt động
         </h2>
         <p className="mt-1 text-sm text-muted-foreground max-w-md">
-          Hoạt động bạn đang tìm kiếm không tồn tại hoặc đã bị gỡ bỏ khỏi hệ thống.
+          Hoạt động bạn đang tìm kiếm không tồn tại hoặc đã bị gỡ bỏ khỏi hệ
+          thống.
         </p>
         <div className="mt-6 flex gap-3">
           <Button asChild variant="default">
@@ -579,7 +580,9 @@ export const DetailActivitiesPage = () => {
                     <span
                       className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold backdrop-blur-md ${heroStatus.pillClass}`}
                     >
-                      <span className={`size-2 rounded-full ${heroStatus.dotColor}`} />
+                      <span
+                        className={`size-2 rounded-full ${heroStatus.dotColor}`}
+                      />
                       {heroStatus.label}
                     </span>
                   );
@@ -593,7 +596,9 @@ export const DetailActivitiesPage = () => {
                   >
                     <Flag className="size-3 text-blue-400" />
                     <span>Chiến dịch:</span>
-                    <strong className="text-white">{activity.campaignName}</strong>
+                    <strong className="text-white">
+                      {activity.campaignName}
+                    </strong>
                   </Link>
                 )}
               </div>
@@ -642,7 +647,9 @@ export const DetailActivitiesPage = () => {
                 <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-blue-100 backdrop-blur-xs">
                   <Calendar className="size-4 text-blue-300 shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-[10px] text-blue-300 font-medium">Bắt đầu</p>
+                    <p className="text-[10px] text-blue-300 font-medium">
+                      Bắt đầu
+                    </p>
                     <p className="font-semibold text-white truncate">
                       {formatDateTimeVN(activity.startTime)}
                     </p>
@@ -653,8 +660,13 @@ export const DetailActivitiesPage = () => {
                 <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-blue-100 backdrop-blur-xs">
                   <MapPin className="size-4 text-rose-400 shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-[10px] text-blue-300 font-medium">Địa điểm</p>
-                    <p className="font-semibold text-white truncate max-w-[150px] sm:max-w-[180px]" title={primaryLocationName}>
+                    <p className="text-[10px] text-blue-300 font-medium">
+                      Địa điểm
+                    </p>
+                    <p
+                      className="font-semibold text-white truncate max-w-[150px] sm:max-w-[180px]"
+                      title={primaryLocationName}
+                    >
                       {primaryLocationName}
                     </p>
                   </div>
@@ -664,9 +676,14 @@ export const DetailActivitiesPage = () => {
                 <div className="flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-blue-100 backdrop-blur-xs">
                   <Users className="size-4 text-emerald-400 shrink-0" />
                   <div className="min-w-0">
-                    <p className="text-[10px] text-blue-300 font-medium">Chỉ tiêu</p>
+                    <p className="text-[10px] text-blue-300 font-medium">
+                      Chỉ tiêu
+                    </p>
                     <p className="font-semibold text-white truncate">
-                      {activity.registeredCount}/{activity.capacity ? `${activity.capacity} TNV` : "Không giới hạn"}
+                      {activity.registeredCount}/
+                      {activity.capacity
+                        ? `${activity.capacity} TNV`
+                        : "Không giới hạn"}
                     </p>
                   </div>
                 </div>
@@ -687,7 +704,8 @@ export const DetailActivitiesPage = () => {
                   Nội dung & Yêu cầu hoạt động
                 </CardTitle>
                 <CardDescription>
-                  Thông tin giới thiệu chi tiết và kế hoạch triển khai của ban tổ chức
+                  Thông tin giới thiệu chi tiết và kế hoạch triển khai của ban
+                  tổ chức
                 </CardDescription>
               </CardHeader>
               <Separator />
@@ -712,7 +730,8 @@ export const DetailActivitiesPage = () => {
                   Quyền lợi Tình nguyện viên
                 </CardTitle>
                 <CardDescription>
-                  Chế độ ghi nhận ngày công tác xã hội và giờ rèn luyện sinh viên ĐH Đồng Tháp
+                  Chế độ ghi nhận ngày công tác xã hội và giờ rèn luyện sinh
+                  viên ĐH Đồng Tháp
                 </CardDescription>
               </CardHeader>
               <Separator />
@@ -769,12 +788,15 @@ export const DetailActivitiesPage = () => {
                   </span>
                 </div>
                 <CardDescription>
-                  Tình nguyện viên phải có mặt trong bán kính cho phép tại các tọa độ sau để điểm danh
+                  Tình nguyện viên phải có mặt trong bán kính cho phép tại các
+                  tọa độ sau để điểm danh
                 </CardDescription>
               </CardHeader>
               <Separator />
               <CardContent className="pt-4 space-y-4">
-                {activity.locations && activity.locations.length > 0 && activeLocation ? (
+                {activity.locations &&
+                activity.locations.length > 0 &&
+                activeLocation ? (
                   <>
                     {/* Bản đồ Google Maps nhúng */}
                     <div className="space-y-2">
@@ -787,7 +809,7 @@ export const DetailActivitiesPage = () => {
                           referrerPolicy="no-referrer-when-downgrade"
                           src={`https://maps.google.com/maps?q=${activeLocation.latitude},${activeLocation.longitude}&hl=vi&z=16&output=embed`}
                         />
-                        <div className="absolute top-3 left-3 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/95 px-3 py-1.5 text-xs font-medium text-slate-800 shadow-sm backdrop-blur-xs">
+                        <div className="absolute top-3 right-3 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white/95 px-3 py-1.5 text-xs font-medium text-slate-800 shadow-sm backdrop-blur-xs">
                           <MapPin className="size-3.5 shrink-0 text-rose-600" />
                           <span className="truncate font-semibold">
                             {activeLocation.name}
@@ -801,7 +823,8 @@ export const DetailActivitiesPage = () => {
 
                       {activity.locations.length > 1 && (
                         <p className="text-[12px] text-muted-foreground italic">
-                          * Nhấp vào từng điểm tập kết bên dưới để chuyển góc nhìn bản đồ.
+                          * Nhấp vào từng điểm tập kết bên dưới để chuyển góc
+                          nhìn bản đồ.
                         </p>
                       )}
                     </div>
@@ -846,8 +869,8 @@ export const DetailActivitiesPage = () => {
                                 </p>
                               )}
                               <p className="text-[11px] text-slate-500 font-mono pl-8">
-                                Tọa độ: {loc.latitude.toFixed(6)}, {loc.longitude.toFixed(6)}{" "}
-                                • Bán kính cho phép:{" "}
+                                Tọa độ: {loc.latitude.toFixed(6)},{" "}
+                                {loc.longitude.toFixed(6)} • Bán kính cho phép:{" "}
                                 <strong className="text-blue-700">
                                   {loc.allowedRadiusMeters}m
                                 </strong>
@@ -927,7 +950,9 @@ export const DetailActivitiesPage = () => {
                     </span>
                     <span className="text-slate-900">
                       <strong>{activity.registeredCount}</strong> /{" "}
-                      {activity.capacity ? `${activity.capacity} TNV` : "Vô hạn"}
+                      {activity.capacity
+                        ? `${activity.capacity} TNV`
+                        : "Vô hạn"}
                     </span>
                   </div>
 
@@ -1086,7 +1111,9 @@ export const DetailActivitiesPage = () => {
                   <ul className="list-disc pl-4 space-y-0.5 text-[11px] text-slate-600">
                     <li>Có mặt trước 15 phút tại địa điểm tập kết.</li>
                     <li>Mặc trang phục chỉnh tề (áo Đoàn / áo đồng phục).</li>
-                    <li>Bật định vị GPS trên điện thoại để điểm danh hợp lệ.</li>
+                    <li>
+                      Bật định vị GPS trên điện thoại để điểm danh hợp lệ.
+                    </li>
                   </ul>
                 </div>
               </CardContent>

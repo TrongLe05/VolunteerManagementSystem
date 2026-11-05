@@ -40,11 +40,14 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toaster";
+import { ConfirmDialog } from "@/components/ui/alert-dialog";
+import { AdminTableRowSkeleton } from "@/components/common/Skeletons";
 
 interface AdminCampaignsTabProps {
   campaigns: Campaign[];
   organizations: Organization[];
   onRefresh: () => void;
+  isLoading?: boolean;
 }
 
 interface StatusOption {
@@ -64,10 +67,12 @@ export function AdminCampaignsTab({
   campaigns,
   organizations,
   onRefresh,
+  isLoading = false,
 }: AdminCampaignsTabProps) {
   const { user } = useAuth();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [deletingCampaign, setDeletingCampaign] = useState<Campaign | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
@@ -172,12 +177,14 @@ export function AdminCampaignsTab({
     }
   };
 
-  const handleDelete = async (camp: Campaign) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa chiến dịch "${camp.name}"?`)) {
-      return;
-    }
+  const handleDelete = (camp: Campaign) => {
+    setDeletingCampaign(camp);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingCampaign) return;
     try {
-      await toast.promise(campaignApi.remove(camp.id), {
+      await toast.promise(campaignApi.remove(deletingCampaign.id), {
         loading: "Đang xóa chiến dịch...",
         success: "Đã xóa chiến dịch.",
         error: (err) =>
@@ -187,6 +194,7 @@ export function AdminCampaignsTab({
               "Chỉ có thể xóa chiến dịch đang ở trạng thái DRAFT."
             : "Lỗi kết nối máy chủ.",
       });
+      setDeletingCampaign(null);
       onRefresh();
     } catch {
       // Handled
@@ -229,7 +237,9 @@ export function AdminCampaignsTab({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {campaigns.length > 0 ? (
+                {isLoading ? (
+                  <AdminTableRowSkeleton columns={5} />
+                ) : campaigns.length > 0 ? (
                   campaigns.map((camp) => {
                     const statusCfg = getActivityStatusConfig(camp.status);
                     return (
@@ -425,6 +435,22 @@ export function AdminCampaignsTab({
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Hộp thoại xác nhận xóa chuẩn AlertDialog của dthu-kit */}
+      <ConfirmDialog
+        open={Boolean(deletingCampaign)}
+        onOpenChange={(open) => !open && setDeletingCampaign(null)}
+        title="Xác nhận xóa chiến dịch?"
+        description={
+          deletingCampaign
+            ? `Bạn có chắc muốn xóa chiến dịch "${deletingCampaign.name}"? Hành động này sẽ xóa toàn bộ các thiết lập liên quan và không thể hoàn tác.`
+            : undefined
+        }
+        confirmLabel="Xóa chiến dịch"
+        cancelLabel="Hủy"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
+      />
     </>
   );
 }

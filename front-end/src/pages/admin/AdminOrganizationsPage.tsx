@@ -6,13 +6,17 @@ import { AdminOrganizationsTab } from "@/components/admin/AdminOrganizationsTab"
 
 export function AdminOrganizationsPage() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
+    setIsLoading(true);
     try {
       const res = await organizationApi.getAll();
       setOrganizations(res || []);
     } catch {
       // Ignore
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -27,6 +31,7 @@ export function AdminOrganizationsPage() {
   return (
     <AdminOrganizationsTab
       organizations={organizations}
+      isLoading={isLoading}
       onRefresh={fetchData}
     />
   );

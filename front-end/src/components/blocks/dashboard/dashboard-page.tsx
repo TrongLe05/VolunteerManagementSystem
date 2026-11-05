@@ -13,7 +13,8 @@ import { bdTokens } from "./tokens"
 import { WeekScheduleGrid, type DashboardScheduleEvent, type DashboardWeekDay, type DashboardWeekLeader } from "./week-schedule"
 
 export interface DashboardNotification { id: string; title: string; sender: string; time: string; unread?: boolean }
-export interface DashboardPendingInfo { emptyTitle: string; emptyHint: string; count?: number }
+export interface DashboardPendingItem { id: string; title: string; subtitle?: string; statusBadge?: string; actionLabel?: string; onAction?: () => void }
+export interface DashboardPendingInfo { emptyTitle: string; emptyHint: string; count?: number; items?: DashboardPendingItem[]; onViewAll?: () => void }
 export type DashboardWidgetId = "stats" | "chart" | "pending" | "week" | "today" | "notifications"
 export type DashboardZone = "top" | "main" | "side"
 export interface DashboardLayoutPreset { id: string; name: string; hidden: DashboardWidgetId[]; /** Small caption under the name, e.g. "Mặc định". */ note?: string }
@@ -21,12 +22,19 @@ export interface DashboardLayoutPreset { id: string; name: string; hidden: Dashb
 export interface DashboardLayoutState { zones: Record<DashboardZone, DashboardWidgetId[]>; hidden: DashboardWidgetId[]; half: DashboardWidgetId[] }
 
 export const dashboardDefaultLayouts: DashboardLayoutPreset[] = [
-  { id: "school", name: "Mẫu của trường", hidden: [], note: "Mặc định" },
-  { id: "compact", name: "Gọn nhẹ", hidden: ["pending", "week"] },
+  { id: "school", name: "Tổng quan Đoàn - Hội", hidden: [], note: "Mặc định" },
+  { id: "compact", name: "Gọn nhẹ", hidden: ["week", "pending"] },
   { id: "schedule", name: "Tập trung lịch", hidden: ["chart", "notifications"] },
 ]
 
-const widgetTitles: Record<DashboardWidgetId, string> = { stats: "Chỉ số của tôi", chart: "Văn bản của tôi theo tháng", pending: "Việc đang chờ tôi", week: "Lịch tuần lãnh đạo", today: "Lịch của tôi hôm nay", notifications: "Thông báo" }
+const widgetTitles: Record<DashboardWidgetId, string> = {
+  stats: "Chỉ số tổng quan",
+  chart: "Xu hướng hoạt động & Đăng ký",
+  pending: "Việc đang chờ xử lý",
+  week: "Lịch hoạt động tình nguyện tuần",
+  today: "Lịch hoạt động hôm nay",
+  notifications: "Thông báo & cập nhật",
+}
 const zoneHint: Record<DashboardZone, string> = { top: "Đầu trang — thả widget vào đây để rộng toàn màn hình, trên cả hai cột", main: "Cột chính — thả widget vào đây", side: "Cột bên — thả widget vào đây" }
 
 export interface DashboardPageProps {
@@ -169,8 +177,75 @@ export function DashboardPage({ dateLabel, stats, chart, pending, week, today, n
         return <DashboardWidget key={id} {...c} title={chart.title} subtitle={chart.subtitle}><LineChart labels={chart.labels} series={chart.series} ariaLabel={chart.title} /></DashboardWidget>
       case "pending":
         return (
-          <DashboardWidget key={id} {...c} title="Việc đang chờ tôi" subtitle={pending.subtitle}>
-            <p className="m-0 mt-[18px] mb-1 rounded-[11px] border border-dashed border-(--bd-ke-2) px-[15px] py-[11px] text-small leading-[1.7] text-(--bd-chu-3)"><b className="mr-1.5 font-semibold text-(--bd-chu-2)">{pending.emptyTitle}</b><span>{pending.emptyHint}</span></p>
+          <DashboardWidget
+            key={id}
+            {...c}
+            title={
+              <span className="flex items-center gap-2">
+                {widgetTitles[id]}
+                {pending.items && pending.items.length > 0 ? (
+                  <span className="rounded-full bg-red-100 text-red-600 px-2 py-0.5 text-xs font-bold">
+                    {pending.items.length}
+                  </span>
+                ) : null}
+              </span>
+            }
+            subtitle={pending.subtitle}
+            actions={
+              pending.onViewAll ? (
+                <button
+                  type="button"
+                  onClick={pending.onViewAll}
+                  className="cursor-pointer border-0 bg-transparent p-0 text-small font-semibold text-(--bd-s1)"
+                >
+                  Quản lý tất cả →
+                </button>
+              ) : undefined
+            }
+          >
+            {pending.items && pending.items.length > 0 ? (
+              <ul className="m-0 flex list-none flex-col gap-2 p-0 mt-3">
+                {pending.items.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-(--bd-ke) bg-(--bd-mat) p-3 transition-colors hover:bg-muted/50"
+                  >
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-small text-(--bd-chu) truncate">
+                          {item.title}
+                        </span>
+                        {item.statusBadge && (
+                          <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 shrink-0">
+                            {item.statusBadge}
+                          </span>
+                        )}
+                      </div>
+                      {item.subtitle && (
+                        <p className="text-caption text-(--bd-chu-3) truncate">
+                          {item.subtitle}
+                        </p>
+                      )}
+                    </div>
+                    {item.onAction && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={item.onAction}
+                        className="shrink-0 text-xs h-8"
+                      >
+                        {item.actionLabel || "Xử lý"}
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="m-0 mt-[18px] mb-1 rounded-[11px] border border-dashed border-(--bd-ke-2) px-[15px] py-[11px] text-small leading-[1.7] text-(--bd-chu-3)">
+                <b className="mr-1.5 font-semibold text-(--bd-chu-2)">{pending.emptyTitle}</b>
+                <span>{pending.emptyHint}</span>
+              </p>
+            )}
           </DashboardWidget>
         )
       case "week":
