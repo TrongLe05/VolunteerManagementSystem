@@ -13,6 +13,7 @@ import { AdminCampaignsPage } from "./pages/admin/AdminCampaignsPage";
 import { AdminOrganizationsPage } from "./pages/admin/AdminOrganizationsPage";
 import { AdminVolunteersPage } from "./pages/admin/AdminVolunteersPage";
 import { AdminUsersPage } from "./pages/admin/AdminUsersPage";
+import { AdminAuditLogsPage } from "./pages/admin/AdminAuditLogsPage";
 import { MainLayout } from "./components/layout/MainLayout";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import { ChangePasswordPage } from "./pages/auth/ChangePasswordPage";
@@ -56,7 +57,10 @@ function App() {
           <Route path="campaigns" element={<AdminCampaignsPage />} />
           <Route path="organizations" element={<AdminOrganizationsPage />} />
           <Route path="volunteers" element={<AdminVolunteersPage />} />
-          <Route path="users" element={<AdminUsersPage />} />
+          <Route element={<ProtectedRoute allowedRoles={["SUPER_ADMIN"]} />}>
+            <Route path="users" element={<AdminUsersPage />} />
+            <Route path="audit-logs" element={<AdminAuditLogsPage />} />
+          </Route>
         </Route>
       </Route>
 
