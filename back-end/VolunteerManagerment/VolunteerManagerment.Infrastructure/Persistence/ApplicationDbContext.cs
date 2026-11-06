@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Domain.Entities;
 
@@ -22,6 +22,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<ActivityRegistration> ActivityRegistrations => Set<ActivityRegistration>();
     public DbSet<Attendance> Attendances => Set<Attendance>();
     public DbSet<AttendanceSession> AttendanceSessions => Set<AttendanceSession>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -184,5 +185,26 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
         modelBuilder.Entity<Organization>().ToTable("organizations");
         modelBuilder.Entity<User>().ToTable("users");
         modelBuilder.Entity<Role>().ToTable("roles");
+
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.ToTable("audit_logs");
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.Action).HasMaxLength(100).IsRequired();
+            entity.Property(a => a.EntityType).HasMaxLength(100).IsRequired();
+            entity.Property(a => a.EntityId);
+            entity.Property(a => a.OldValues).HasColumnType("jsonb");
+            entity.Property(a => a.NewValues).HasColumnType("jsonb");
+            entity.Property(a => a.IpAddress).HasColumnType("inet");
+            entity.Property(a => a.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            entity.HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(a => a.UserId).HasDatabaseName("idx_audit_logs_user_id");
+            entity.HasIndex(a => new { a.EntityType, a.EntityId }).HasDatabaseName("idx_audit_logs_entity");
+        });
     }
 }

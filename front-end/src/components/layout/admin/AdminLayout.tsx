@@ -4,6 +4,7 @@ import {
   Building2,
   CalendarHeart,
   ExternalLink,
+  FileClock,
   Flag,
   GraduationCap,
   Home,
@@ -67,6 +68,12 @@ const TAB_MAP: Record<
     icon: <Users className="size-3.5" />,
     href: "/admin/users",
   },
+  "/admin/audit-logs": {
+    id: "audit-logs",
+    label: "Nhật ký hệ thống",
+    icon: <FileClock className="size-3.5" />,
+    href: "/admin/audit-logs",
+  },
 };
 
 export function AdminLayout() {
@@ -129,7 +136,14 @@ export function AdminLayout() {
               id: "users",
               label: "Tài khoản & Phân quyền",
               icon: <Users />,
+              section: "HỆ THỐNG & BẢO MẬT",
               href: "/admin/users",
+            },
+            {
+              id: "audit-logs",
+              label: "Nhật ký hệ thống",
+              icon: <FileClock />,
+              href: "/admin/audit-logs",
             },
           ]
         : []),
@@ -146,6 +160,7 @@ export function AdminLayout() {
       return "organizations";
     if (location.pathname.startsWith("/admin/volunteers")) return "volunteers";
     if (location.pathname.startsWith("/admin/users")) return "users";
+    if (location.pathname.startsWith("/admin/audit-logs")) return "audit-logs";
     return "dashboard";
   }, [location.pathname]);
 

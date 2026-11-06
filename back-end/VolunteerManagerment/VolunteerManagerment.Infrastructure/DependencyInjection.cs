@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Resend;
@@ -7,6 +7,7 @@ using VolunteerManagerment.Application.Common.Interfaces.Repositories;
 using VolunteerManagerment.Infrastructure.Authentication;
 using VolunteerManagerment.Infrastructure.BackgroundJobs;
 using VolunteerManagerment.Infrastructure.Persistence;
+using VolunteerManagerment.Infrastructure.Persistence.Interceptors;
 using VolunteerManagerment.Infrastructure.Persistence.Repository;
 using VolunteerManagerment.Infrastructure.Services;
 
@@ -16,8 +17,10 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<AuditSaveChangesInterceptor>();
+
         var connectionString = configuration.GetConnectionString("DefaultConnection");
-        services.AddDbContext<ApplicationDbContext>(options =>
+        services.AddDbContext<ApplicationDbContext>((sp, options) =>
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
                 npgsqlOptions.EnableRetryOnFailure(
@@ -25,7 +28,8 @@ public static class DependencyInjection
                     maxRetryDelay: TimeSpan.FromSeconds(10),
                     errorCodesToAdd: null);
             })
-            .UseSnakeCaseNamingConvention());
+            .UseSnakeCaseNamingConvention()
+            .AddInterceptors(sp.GetRequiredService<AuditSaveChangesInterceptor>()));
 
         services.AddScoped<IApplicationDbContext>(provider => 
             provider.GetRequiredService<ApplicationDbContext>());
