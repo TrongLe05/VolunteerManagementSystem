@@ -12,6 +12,8 @@ public record UserInfo(
     Guid Id,
     string Username,
     string Email,
+    string? AvatarUrl,
+    Guid OrganizationId,
     string OrganizationName,
     List<string> Roles
 );

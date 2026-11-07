@@ -71,10 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const response = await authApi.login(data);
     localStorage.setItem("accessToken", response.accessToken);
     localStorage.setItem("refreshToken", response.refreshToken);
-
-    // Gọi thêm getMe() để lấy đầy đủ organizationId (vì LoginResponseDto chưa có organizationId)
-    const fullUser = await authApi.getMe();
-    setUser(fullUser);
+    setUser(response.user);
   };
 
   // Hàm Đăng xuất: gọi API thu hồi RefreshToken -> xóa localStorage -> xóa State
