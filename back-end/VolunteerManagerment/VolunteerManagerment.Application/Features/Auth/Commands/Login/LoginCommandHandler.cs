@@ -67,6 +67,8 @@ public sealed class LoginCommandHandler(
                 user.Id,
                 user.Username,
                 user.Email,
+                user.AvatarUrl,
+                user.Organization.Id,
                 user.Organization.Name,
                 roles
             )
