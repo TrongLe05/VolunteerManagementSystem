@@ -17,6 +17,7 @@ import {
 
 import { activityApi } from "@/api/activityApi";
 import { attendanceApi } from "@/api/attendanceApi";
+import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 import type { Activity, MyActivityRegistration } from "@/types/volunteer.types";
 import type { ActiveAttendanceSession } from "@/types/attendance.types";
 import {
@@ -78,6 +79,10 @@ export function MyRegistrationsPage() {
   useEffect(() => {
     fetchMyRegistrations();
   }, [fetchMyRegistrations]);
+
+  useDashboardRealtime({
+    onActivityChanged: fetchMyRegistrations,
+  });
 
   const stats = useMemo(() => {
     const approved = registrations.filter(

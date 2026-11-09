@@ -47,7 +47,7 @@ public class OpenAttendanceSessionCommandHandler(
             throw new InvalidOperationException("Đã tồn tại phiên điểm danh đang mở cho hoạt động này.");
 
         var now = DateTimeOffset.UtcNow;
-        activity.EnsureCanOpenAttendanceSessionAndTransition(now);
+        activity.EnsureCanOpenAttendanceSessionAndTransition(now, request.Type);
 
         var attendanceSession = new AttendanceSession
         {

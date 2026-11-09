@@ -152,13 +152,29 @@ export function AdminActivitiesTab({
     setSelectedCampaign(campaigns.find((c) => c.id === act.campaignId) || null);
     setName(act.name);
     setDescription(act.description || "");
-    setStartDate(act.startTime ? new Date(act.startTime) : undefined);
-    setEndDate(act.endTime ? new Date(act.endTime) : undefined);
+    const start = act.startTime ? new Date(act.startTime) : undefined;
+    const end = act.endTime ? new Date(act.endTime) : undefined;
+    setStartDate(start);
+    setEndDate(end);
     setCapacity(act.capacity ? String(act.capacity) : "50");
     setCreditDays(String(act.creditDays));
     setCreditHours(String(act.creditHours));
+
+    // Tự động suy luận trạng thái chuẩn xác theo thời gian nếu không phải DRAFT hoặc CANCELLED
+    let targetStatus = act.status;
+    if (act.status !== "DRAFT" && act.status !== "CANCELLED") {
+      const now = new Date();
+      if (end && end <= now) {
+        targetStatus = "COMPLETED";
+      } else if (start && start <= now) {
+        targetStatus = "ONGOING";
+      } else if (start && start > now) {
+        targetStatus = "OPEN";
+      }
+    }
+
     setSelectedStatus(
-      ACTIVITY_STATUS_LIST.find((s) => s.value === act.status) ||
+      ACTIVITY_STATUS_LIST.find((s) => s.value === targetStatus) ||
         ACTIVITY_STATUS_LIST[1],
     );
     setLocations(
@@ -181,6 +197,34 @@ export function AdminActivitiesTab({
           ],
     );
     setIsFormOpen(true);
+  };
+
+  const handleStartDateChange = (d: Date | undefined) => {
+    setStartDate(d);
+    if (editingActivity && selectedStatus.value !== "DRAFT" && selectedStatus.value !== "CANCELLED") {
+      const now = new Date();
+      if (endDate && endDate <= now) {
+        setSelectedStatus(ACTIVITY_STATUS_LIST.find((s) => s.value === "COMPLETED") || selectedStatus);
+      } else if (d && d <= now) {
+        setSelectedStatus(ACTIVITY_STATUS_LIST.find((s) => s.value === "ONGOING") || selectedStatus);
+      } else if (d && d > now) {
+        setSelectedStatus(ACTIVITY_STATUS_LIST.find((s) => s.value === "OPEN") || selectedStatus);
+      }
+    }
+  };
+
+  const handleEndDateChange = (d: Date | undefined) => {
+    setEndDate(d);
+    if (editingActivity && selectedStatus.value !== "DRAFT" && selectedStatus.value !== "CANCELLED") {
+      const now = new Date();
+      if (d && d <= now) {
+        setSelectedStatus(ACTIVITY_STATUS_LIST.find((s) => s.value === "COMPLETED") || selectedStatus);
+      } else if (startDate && startDate <= now) {
+        setSelectedStatus(ACTIVITY_STATUS_LIST.find((s) => s.value === "ONGOING") || selectedStatus);
+      } else if (startDate && startDate > now) {
+        setSelectedStatus(ACTIVITY_STATUS_LIST.find((s) => s.value === "OPEN") || selectedStatus);
+      }
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -507,11 +551,11 @@ export function AdminActivitiesTab({
             <div className="grid grid-col-2 gap-3 ">
               <div className="space-y-1.5">
                 <Label>Thời gian bắt đầu hoạt động *</Label>
-                <DateTimePicker value={startDate} onChange={setStartDate} />
+                <DateTimePicker value={startDate} onChange={handleStartDateChange} />
               </div>
               <div className="space-y-1.5">
                 <Label>Thời gian kết thúc hoạt động *</Label>
-                <DateTimePicker value={endDate} onChange={setEndDate} />
+                <DateTimePicker value={endDate} onChange={handleEndDateChange} />
               </div>
             </div>
 

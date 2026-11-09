@@ -55,8 +55,30 @@ public class UpdateActivityCommandHandler(
         activity.Capacity = request.Capacity;
         activity.CreditHours = request.CreditHours;
         activity.CreditDays = request.CreditDays;
-        activity.Status = request.Status;
-        activity.UpdatedAt = DateTimeOffset.UtcNow;
+
+        var now = DateTimeOffset.UtcNow;
+        // Tự động suy luận trạng thái chuẩn xác theo thời gian thực (trừ khi cố tình để DRAFT hoặc CANCELLED)
+        if (request.Status is not ("DRAFT" or "CANCELLED"))
+        {
+            if (activity.EndTime <= now)
+            {
+                activity.Status = "COMPLETED";
+            }
+            else if (activity.StartTime <= now)
+            {
+                activity.Status = "ONGOING";
+            }
+            else
+            {
+                activity.Status = "OPEN";
+            }
+        }
+        else
+        {
+            activity.Status = request.Status;
+        }
+
+        activity.UpdatedAt = now;
 
         if (request.Locations is not null)
         {

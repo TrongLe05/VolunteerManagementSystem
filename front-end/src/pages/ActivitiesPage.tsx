@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { activityApi } from "@/api/activityApi";
 import { campaignApi } from "@/api/campaignApi";
 import { organizationApi } from "@/api/organizationApi";
+import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 import type { Organization } from "@/types/auth.types";
 import type {
   Activity,
@@ -133,6 +134,14 @@ export function ActivitiesPage() {
   useEffect(() => {
     fetchMetaAndRegistrations();
   }, [fetchMetaAndRegistrations]);
+
+  useDashboardRealtime({
+    onActivityChanged: () => {
+      fetchActivities();
+      fetchMetaAndRegistrations();
+    },
+    onCampaignChanged: fetchMetaAndRegistrations,
+  });
 
   const registrationMap = useMemo(() => {
     const map = new Map<string, string>();
