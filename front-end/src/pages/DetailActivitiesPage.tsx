@@ -25,6 +25,7 @@ import {
 
 import { activityApi } from "@/api/activityApi";
 import { attendanceApi } from "@/api/attendanceApi";
+import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 import { useAuth } from "@/context/AuthContext";
 import type { Activity } from "@/types/volunteer.types";
 import type {
@@ -128,6 +129,13 @@ export const DetailActivitiesPage = () => {
 
     return () => clearInterval(interval);
   }, [fetchActivityAndStatus, fetchActiveSession]);
+
+  useDashboardRealtime({
+    onActivityChanged: () => {
+      fetchActivityAndStatus();
+      fetchActiveSession();
+    },
+  });
 
   // Real-time second-by-second countdown for the active attendance window
   useEffect(() => {

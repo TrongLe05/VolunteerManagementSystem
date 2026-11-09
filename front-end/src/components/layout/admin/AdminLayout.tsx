@@ -83,10 +83,17 @@ export function AdminLayout() {
 
   const isSuperAdmin = hasRole(["SUPER_ADMIN"]);
   const [menuExpanded, setMenuExpanded] = useState(true);
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState(dashboardSignalR.isConnected());
 
-  // Khởi động kết nối SignalR thời gian thực
+  // Khởi động kết nối SignalR thời gian thực và theo dõi trạng thái
   useEffect(() => {
-    dashboardSignalR.start();
+    dashboardSignalR.start().then(() => {
+      setIsRealtimeConnected(dashboardSignalR.isConnected());
+    });
+    const interval = setInterval(() => {
+      setIsRealtimeConnected(dashboardSignalR.isConnected());
+    }, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogout = async () => {
@@ -249,11 +256,25 @@ export function AdminLayout() {
   const toolbar = (
     <div className="flex items-center gap-1.5 mr-1">
       <span
-        className="hidden md:inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 border border-emerald-200"
-        title="Đang đồng bộ dữ liệu thời gian thực qua SignalR"
+        className={`hidden md:inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold border ${
+          isRealtimeConnected
+            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+            : "bg-amber-50 text-amber-700 border-amber-200"
+        }`}
+        title={
+          isRealtimeConnected
+            ? "Đang đồng bộ dữ liệu thời gian thực qua SignalR"
+            : "Chưa kết nối SignalR (Đang kết nối lại...)"
+        }
       >
-        <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
-        Real-time
+        <span
+          className={`size-2 rounded-full ${
+            isRealtimeConnected
+              ? "bg-emerald-500 animate-pulse"
+              : "bg-amber-500"
+          }`}
+        />
+        {isRealtimeConnected ? "Real-time" : "Đang kết nối..."}
       </span>
 
       <Badge

@@ -128,20 +128,60 @@ public class ActivityAndCampaignDomainTests
     public void Activity_EnsureCanOpenAttendanceSessionAndTransition_ShouldHandleAllStatuses()
     {
         var now = DateTimeOffset.UtcNow;
-        var openActivity = new Activity { Status = "OPEN" };
+        var openActivity = new Activity
+        {
+            Status = "OPEN",
+            StartTime = now.AddMinutes(30),
+            EndTime = now.AddHours(3)
+        };
 
-        openActivity.EnsureCanOpenAttendanceSessionAndTransition(now);
+        // 1. Mở Check-in trước giờ 30 phút (trong khoảng đệm 60p) -> Thành công và chuyển ONGOING
+        openActivity.EnsureCanOpenAttendanceSessionAndTransition(now, "CHECK_IN");
         openActivity.Status.Should().Be("ONGOING");
         openActivity.UpdatedAt.Should().Be(now);
 
-        // Khi đã ONGOING thì vẫn cho phép mở phiên tiếp theo (ví dụ mở CHECK_OUT)
-        openActivity.Invoking(a => a.EnsureCanOpenAttendanceSessionAndTransition(now.AddHours(1)))
+        // 2. Khi đã ONGOING và trong giờ -> Cho phép mở CHECK_OUT
+        openActivity.Invoking(a => a.EnsureCanOpenAttendanceSessionAndTransition(now.AddHours(1), "CHECK_OUT"))
             .Should().NotThrow();
 
+        // 3. Hoạt động đã COMPLETED -> Không được mở
         var completedActivity = new Activity { Status = "COMPLETED" };
         completedActivity.Invoking(a => a.EnsureCanOpenAttendanceSessionAndTransition(now))
             .Should().Throw<DomainException>()
             .WithMessage("*đang mở hoặc đang diễn ra*");
+
+        // 4. Mở Check-in quá sớm (>60 phút trước StartTime) -> Bị chặn
+        var futureActivity = new Activity
+        {
+            Status = "OPEN",
+            StartTime = now.AddHours(3),
+            EndTime = now.AddHours(6)
+        };
+        futureActivity.Invoking(a => a.EnsureCanOpenAttendanceSessionAndTransition(now, "CHECK_IN"))
+            .Should().Throw<DomainException>()
+            .WithMessage("*Chưa đến thời gian cho phép điểm danh*");
+
+        // 5. Mở Check-out khi hoạt động chưa bắt đầu (currentTime < StartTime) -> Bị chặn
+        var notStartedYetActivity = new Activity
+        {
+            Status = "OPEN",
+            StartTime = now.AddMinutes(15),
+            EndTime = now.AddHours(3)
+        };
+        notStartedYetActivity.Invoking(a => a.EnsureCanOpenAttendanceSessionAndTransition(now, "CHECK_OUT"))
+            .Should().Throw<DomainException>()
+            .WithMessage("*Chỉ có thể mở phiên Điểm danh RA (Check-out) khi hoạt động đã chính thức bắt đầu*");
+
+        // 6. Mở điểm danh sau khi hoạt động đã hết giờ (currentTime > EndTime) -> Bị chặn
+        var endedActivity = new Activity
+        {
+            Status = "OPEN",
+            StartTime = now.AddHours(-4),
+            EndTime = now.AddMinutes(-10)
+        };
+        endedActivity.Invoking(a => a.EnsureCanOpenAttendanceSessionAndTransition(now))
+            .Should().Throw<DomainException>()
+            .WithMessage("*Hoạt động đã kết thúc thời gian tổ chức*");
     }
 
     [Fact]

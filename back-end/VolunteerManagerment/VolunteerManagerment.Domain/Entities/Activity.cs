@@ -49,13 +49,34 @@ public class Activity : BaseEntity, IAuditableEntity
 
     /// <summary>
     /// Quy tắc nghiệp vụ: Kiểm tra và chuyển trạng thái hoạt động sang ONGOING khi mở phiên điểm danh.
+    /// Cho phép mở Check-in sớm tối đa 60 phút trước giờ bắt đầu để tập hợp lực lượng.
+    /// Chặn mở nếu hoạt động chưa đến khung giờ cho phép hoặc đã kết thúc.
     /// </summary>
-    public void EnsureCanOpenAttendanceSessionAndTransition(DateTimeOffset currentTime)
+    public void EnsureCanOpenAttendanceSessionAndTransition(DateTimeOffset currentTime, string sessionType = "CHECK_IN")
     {
-        if (Status is not ("OPEN" or "ONGOING"))
+        if (Status is not ("OPEN" or "ONGOING" or "PUBLISHED" or "UPCOMING"))
             throw new DomainException("Chỉ có thể mở phiên điểm danh cho hoạt động đang mở hoặc đang diễn ra.");
 
-        if (Status is "OPEN")
+        if (EndTime != default && currentTime > EndTime)
+            throw new DomainException("Hoạt động đã kết thúc thời gian tổ chức, không thể mở thêm phiên điểm danh.");
+
+        if (StartTime != default)
+        {
+            var earliestCheckInAllowed = StartTime.AddMinutes(-60);
+            if (currentTime < earliestCheckInAllowed)
+            {
+                var vnTime = StartTime.ToOffset(TimeSpan.FromHours(7));
+                throw new DomainException($"Chưa đến thời gian cho phép điểm danh (chỉ được mở sớm tối đa 60 phút trước khi bắt đầu lúc {vnTime:HH:mm dd/MM/yyyy}).");
+            }
+
+            if (sessionType == "CHECK_OUT" && currentTime < StartTime)
+            {
+                var vnTime = StartTime.ToOffset(TimeSpan.FromHours(7));
+                throw new DomainException($"Chỉ có thể mở phiên Điểm danh RA (Check-out) khi hoạt động đã chính thức bắt đầu (từ {vnTime:HH:mm dd/MM/yyyy}).");
+            }
+        }
+
+        if (Status is not "ONGOING")
         {
             Status = "ONGOING";
             UpdatedAt = currentTime;

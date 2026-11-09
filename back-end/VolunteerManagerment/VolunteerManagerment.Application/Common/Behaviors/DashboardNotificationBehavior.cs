@@ -26,7 +26,7 @@ public class DashboardNotificationBehavior<TRequest, TResponse>(
 
             if (fullName.Contains(".Commands."))
             {
-                if (fullName.Contains(".Features.Activities."))
+                if (fullName.Contains(".Features.Activities.") || fullName.Contains(".Features.Attendances."))
                 {
                     await notificationService.NotifyActivityChangedAsync(cancellationToken);
                 }

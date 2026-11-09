@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { attendanceApi } from "@/api/attendanceApi";
+import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 import type {
   ActivityAttendanceOverview,
   AttendanceSessionType,
@@ -87,6 +88,10 @@ export function AdminActivityAttendancePage() {
   useEffect(() => {
     fetchOverview();
   }, [fetchOverview]);
+
+  useDashboardRealtime({
+    onActivityChanged: fetchOverview,
+  });
 
   // Live countdown ticker
   useEffect(() => {
