@@ -42,7 +42,7 @@ export function AdminOverviewPage() {
       const [orgRes, campRes, actRes, volRes] = await Promise.allSettled([
         organizationApi.getAll(),
         campaignApi.getAll({ pageNumber: 1, pageSize: 50 }),
-        activityApi.getAll({ pageNumber: 1, pageSize: 50 }),
+        activityApi.getManage({ pageNumber: 1, pageSize: 50 }),
         volunteerApi.getAll({ pageNumber: 1, pageSize: 1 }),
       ]);
 

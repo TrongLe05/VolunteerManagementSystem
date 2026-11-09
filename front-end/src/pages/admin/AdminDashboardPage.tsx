@@ -49,7 +49,7 @@ export function AdminDashboardPage() {
       const [orgRes, campRes, actRes, volRes] = await Promise.allSettled([
         organizationApi.getAll(),
         campaignApi.getAll({ pageNumber: 1, pageSize: 100 }),
-        activityApi.getAll({ pageNumber: 1, pageSize: 100 }),
+        activityApi.getManage({ pageNumber: 1, pageSize: 100 }),
         volunteerApi.getAll({ pageNumber: 1, pageSize: 1 }),
       ]);
 

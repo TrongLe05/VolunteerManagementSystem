@@ -43,6 +43,18 @@ export const activityApi = {
     return response.data;
   },
 
+  getManage: async (
+    params?: GetActivitiesParams,
+  ): Promise<PageResult<Activity>> => {
+    const response = await axiosClient.get<PageResult<Activity>>(
+      "/activities/manage",
+      {
+        params,
+      },
+    );
+    return response.data;
+  },
+
   getById: async (id: string): Promise<Activity> => {
     const response = await axiosClient.get<Activity>(`/activities/${id}`);
     return response.data;
