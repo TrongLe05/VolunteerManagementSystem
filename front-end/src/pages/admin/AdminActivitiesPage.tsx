@@ -14,7 +14,7 @@ export function AdminActivitiesPage() {
     setIsLoading(true);
     try {
       const [actRes, campRes] = await Promise.all([
-        activityApi.getAll({ pageNumber: 1, pageSize: 100 }),
+        activityApi.getManage({ pageNumber: 1, pageSize: 100 }),
         campaignApi.getAll({ pageNumber: 1, pageSize: 100 }),
       ]);
       setActivities(actRes.items || []);

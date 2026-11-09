@@ -35,6 +35,25 @@ describe("activityApi", () => {
     expect(result.items[0].name).toBe("Chủ Nhật Xanh");
   });
 
+  it("getManage fetches paginated activities for admin manage endpoint", async () => {
+    const mockPage = {
+      items: [{ id: "act-admin-1", name: "Hoạt động Đoàn", status: "DRAFT" }],
+      totalCount: 1,
+      pageNumber: 1,
+      pageSize: 10,
+      totalPages: 1,
+    };
+    vi.mocked(axiosClient.get).mockResolvedValueOnce({ data: mockPage });
+
+    const result = await activityApi.getManage({ status: "DRAFT", pageNumber: 1 });
+
+    expect(axiosClient.get).toHaveBeenCalledWith("/activities/manage", {
+      params: { status: "DRAFT", pageNumber: 1 },
+    });
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].status).toBe("DRAFT");
+  });
+
   it("getById fetches activity details by id", async () => {
     const mockActivity = { id: "act-1", name: "Tiếp sức mùa thi", creditHours: 4 };
     vi.mocked(axiosClient.get).mockResolvedValueOnce({ data: mockActivity });

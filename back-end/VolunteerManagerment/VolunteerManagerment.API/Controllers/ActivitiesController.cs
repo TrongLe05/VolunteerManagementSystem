@@ -10,6 +10,7 @@ using VolunteerManagerment.Application.Features.Activities.Commands.UpdateActivi
 using VolunteerManagerment.Application.Features.Activities.Queries.GetActivities;
 using VolunteerManagerment.Application.Features.Activities.Queries.GetActivityById;
 using VolunteerManagerment.Application.Features.Activities.Queries.GetActivityRegistrations;
+using VolunteerManagerment.Application.Features.Activities.Queries.GetAdminActivities;
 using VolunteerManagerment.Application.Features.Activities.Queries.GetMyActivityRegistrations;
 
 namespace VolunteerManagerment.API.Controllers
@@ -24,6 +25,14 @@ namespace VolunteerManagerment.API.Controllers
         {
             var activityId = await sender.Send(command, cancellationToken);
             return CreatedAtAction(nameof(GetActivityById), new { id = activityId }, activityId);
+        }
+
+        [HttpGet("manage")]
+        [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN")]
+        public async Task<IActionResult> GetAdminActivities([FromQuery] GetAdminActivitiesQuery query, CancellationToken cancellationToken)
+        {
+            var activities = await sender.Send(query, cancellationToken);
+            return Ok(activities);
         }
 
         [HttpGet("{id}")]
