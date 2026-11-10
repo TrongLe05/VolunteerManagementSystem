@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -62,8 +63,8 @@ export function AdminAuditLogsTab() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEntity, setSelectedEntity] = useState("ALL");
   const [selectedAction, setSelectedAction] = useState("ALL");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+  const [fromDate, setFromDate] = useState<Date | undefined>();
+  const [toDate, setToDate] = useState<Date | undefined>();
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -92,11 +93,21 @@ export function AdminAuditLogsTab() {
       setTotalCount(res.totalCount || 0);
       setTotalPages(res.totalPages || 1);
     } catch {
-      toast.error("Không thể lấy danh sách nhật ký hệ thống. Vui lòng thử lại!");
+      toast.error(
+        "Không thể lấy danh sách nhật ký hệ thống. Vui lòng thử lại!",
+      );
     } finally {
       setIsLoading(false);
     }
-  }, [searchTerm, selectedEntity, selectedAction, fromDate, toDate, page, pageSize]);
+  }, [
+    searchTerm,
+    selectedEntity,
+    selectedAction,
+    fromDate,
+    toDate,
+    page,
+    pageSize,
+  ]);
 
   useEffect(() => {
     fetchLogs();
@@ -106,8 +117,8 @@ export function AdminAuditLogsTab() {
     setSearchTerm("");
     setSelectedEntity("ALL");
     setSelectedAction("ALL");
-    setFromDate("");
-    setToDate("");
+    setFromDate(undefined);
+    setToDate(undefined);
     setPage(1);
   };
 
@@ -166,12 +177,16 @@ export function AdminAuditLogsTab() {
           <div>
             <h1 className="text-base font-bold text-slate-900 flex items-center gap-2">
               Nhật ký hệ thống (Audit Trail)
-              <Badge variant="outline" className="text-indigo-600 border-indigo-200 bg-indigo-50/50 text-[11px]">
+              <Badge
+                variant="outline"
+                className="text-indigo-600 border-indigo-200 bg-indigo-50/50 text-[11px]"
+              >
                 SUPER_ADMIN ONLY
               </Badge>
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Theo dõi lịch sử thêm, sửa, xoá và giám sát an ninh toàn bộ các thực thể trên hệ thống.
+              Theo dõi lịch sử thêm, sửa, xoá và giám sát an ninh toàn bộ các
+              thực thể trên hệ thống.
             </p>
           </div>
         </div>
@@ -184,7 +199,9 @@ export function AdminAuditLogsTab() {
             disabled={isLoading}
             className="h-8 gap-1.5 text-xs"
           >
-            <RefreshCw className={`size-3.5 ${isLoading ? "animate-spin text-primary" : ""}`} />
+            <RefreshCw
+              className={`size-3.5 ${isLoading ? "animate-spin text-primary" : ""}`}
+            />
             Làm mới
           </Button>
         </div>
@@ -193,9 +210,9 @@ export function AdminAuditLogsTab() {
       {/* Card Bộ lọc */}
       <Card>
         <CardContent className="p-4 space-y-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
             {/* Search */}
-            <div className="relative lg:col-span-2">
+            <div className="relative sm:col-span-2 lg:col-span-4">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
               <Input
                 placeholder="Tìm email, user, ID thực thể, thay đổi..."
@@ -209,7 +226,7 @@ export function AdminAuditLogsTab() {
             </div>
 
             {/* Entity Type Filter */}
-            <div>
+            <div className="sm:col-span-1 lg:col-span-2">
               <Select
                 value={selectedEntity}
                 onValueChange={(val) => {
@@ -222,7 +239,11 @@ export function AdminAuditLogsTab() {
                 </SelectTrigger>
                 <SelectContent>
                   {ENTITY_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-xs"
+                    >
                       {opt.label}
                     </SelectItem>
                   ))}
@@ -231,7 +252,7 @@ export function AdminAuditLogsTab() {
             </div>
 
             {/* Action Filter */}
-            <div>
+            <div className="sm:col-span-1 lg:col-span-2">
               <Select
                 value={selectedAction}
                 onValueChange={(val) => {
@@ -244,7 +265,11 @@ export function AdminAuditLogsTab() {
                 </SelectTrigger>
                 <SelectContent>
                   {ACTION_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-xs"
+                    >
                       {opt.label}
                     </SelectItem>
                   ))}
@@ -253,33 +278,35 @@ export function AdminAuditLogsTab() {
             </div>
 
             {/* Date range trigger / clear */}
-            <div className="flex items-center gap-2">
-              <Input
-                type="date"
-                value={fromDate}
-                onChange={(e) => {
-                  setFromDate(e.target.value);
-                  setPage(1);
-                }}
-                className="h-9 text-xs"
-                title="Từ ngày"
-              />
-              <Input
-                type="date"
-                value={toDate}
-                onChange={(e) => {
-                  setToDate(e.target.value);
-                  setPage(1);
-                }}
-                className="h-9 text-xs"
-                title="Đến ngày"
-              />
+            <div className="sm:col-span-2 lg:col-span-4 flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <DatePicker
+                  value={fromDate}
+                  onChange={(d) => {
+                    setFromDate(d);
+                    setPage(1);
+                  }}
+                  placeholder="Từ ngày"
+                  className="h-9 text-xs w-full"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <DatePicker
+                  value={toDate}
+                  onChange={(d) => {
+                    setToDate(d);
+                    setPage(1);
+                  }}
+                  placeholder="Đến ngày"
+                  className="h-9 text-xs w-full"
+                />
+              </div>
               {activeFilterCount > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleResetFilters}
-                  className="h-9 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                  className="h-9 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 shrink-0"
                   title="Xoá tất cả bộ lọc"
                 >
                   <X className="size-4" />
@@ -297,13 +324,27 @@ export function AdminAuditLogsTab() {
             <Table>
               <TableHeader className="bg-slate-50/70 border-b">
                 <TableRow>
-                  <TableHead className="w-[170px] text-xs font-semibold">Thời gian</TableHead>
-                  <TableHead className="w-[200px] text-xs font-semibold">Người thực hiện</TableHead>
-                  <TableHead className="w-[120px] text-xs font-semibold">Hành động</TableHead>
-                  <TableHead className="w-[160px] text-xs font-semibold">Thực thể</TableHead>
-                  <TableHead className="w-[220px] text-xs font-semibold">Mã ID thực thể</TableHead>
-                  <TableHead className="w-[130px] text-xs font-semibold">Địa chỉ IP</TableHead>
-                  <TableHead className="w-[100px] text-xs font-semibold text-right">Chi tiết</TableHead>
+                  <TableHead className="w-[170px] text-xs font-semibold">
+                    Thời gian
+                  </TableHead>
+                  <TableHead className="w-[200px] text-xs font-semibold">
+                    Người thực hiện
+                  </TableHead>
+                  <TableHead className="w-[120px] text-xs font-semibold">
+                    Hành động
+                  </TableHead>
+                  <TableHead className="w-[160px] text-xs font-semibold">
+                    Thực thể
+                  </TableHead>
+                  <TableHead className="w-[220px] text-xs font-semibold">
+                    Mã ID thực thể
+                  </TableHead>
+                  <TableHead className="w-[130px] text-xs font-semibold">
+                    Địa chỉ IP
+                  </TableHead>
+                  <TableHead className="w-[100px] text-xs font-semibold text-right">
+                    Chi tiết
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -368,7 +409,10 @@ export function AdminAuditLogsTab() {
                       <TableCell className="text-xs">
                         <div className="flex items-center gap-1.5 font-medium text-slate-800">
                           <User className="size-3.5 text-slate-400 shrink-0" />
-                          <span className="truncate max-w-[170px]" title={item.userEmail || "Hệ thống"}>
+                          <span
+                            className="truncate max-w-[170px]"
+                            title={item.userEmail || "Hệ thống"}
+                          >
                             {item.userEmail || "Hệ thống / Anonymous"}
                           </span>
                         </div>
@@ -387,7 +431,10 @@ export function AdminAuditLogsTab() {
                       {/* Mã ID thực thể */}
                       <TableCell className="text-xs font-mono text-slate-500">
                         {item.entityId ? (
-                          <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[11px]" title={item.entityId}>
+                          <span
+                            className="bg-slate-100 px-1.5 py-0.5 rounded text-[11px]"
+                            title={item.entityId}
+                          >
                             {item.entityId.slice(0, 18)}...
                           </span>
                         ) : (
@@ -439,7 +486,10 @@ export function AdminAuditLogsTab() {
                   {Math.min(page * pageSize, totalCount)}
                 </span>{" "}
                 trong tổng số{" "}
-                <span className="font-semibold text-slate-800">{totalCount}</span> sự kiện
+                <span className="font-semibold text-slate-800">
+                  {totalCount}
+                </span>{" "}
+                sự kiện
               </div>
               <Pagination
                 page={page}
