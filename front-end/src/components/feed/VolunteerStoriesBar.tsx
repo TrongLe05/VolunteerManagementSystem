@@ -125,14 +125,11 @@ export function VolunteerStoriesBar({ activities }: VolunteerStoriesBarProps) {
                     </div>
                   </div>
 
-                  {/* Badge ngày CTXH / giờ ở góc trên bên phải */}
-                  {(activity.creditDays > 0 || activity.creditHours > 0) && (
+                  {/* Badge ngày CTXH ở góc trên bên phải */}
+                  {activity.creditDays > 0 && (
                     <div className="absolute top-2 right-2 z-10">
                       <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/95 backdrop-blur-xs px-1.5 py-0.5 text-[9px] font-bold text-white shadow-2xs">
-                        <Award className="size-2.5" />+
-                        {activity.creditDays > 0
-                          ? `${activity.creditDays}d`
-                          : `${activity.creditHours}h`}
+                        <Award className="size-2.5" />+{activity.creditDays}d
                       </span>
                     </div>
                   )}

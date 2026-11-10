@@ -63,7 +63,6 @@ public class GetActivityByIdQueryHandler(
             activity.StartTime,
             activity.EndTime,
             activity.Capacity,
-            activity.CreditHours,
             activity.CreditDays,
             activity.Status,
             activity.CreatedBy,

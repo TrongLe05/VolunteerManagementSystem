@@ -55,7 +55,7 @@ describe("activityApi", () => {
   });
 
   it("getById fetches activity details by id", async () => {
-    const mockActivity = { id: "act-1", name: "Tiếp sức mùa thi", creditHours: 4 };
+    const mockActivity = { id: "act-1", name: "Tiếp sức mùa thi", creditDays: 0.5 };
     vi.mocked(axiosClient.get).mockResolvedValueOnce({ data: mockActivity });
 
     const result = await activityApi.getById("act-1");

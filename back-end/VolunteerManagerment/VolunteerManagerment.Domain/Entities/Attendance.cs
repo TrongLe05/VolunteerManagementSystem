@@ -41,7 +41,7 @@ public class Attendance : BaseEntity
         bool isInsideGeofence,
         decimal distanceMeters,
         decimal allowedRadiusMeters,
-        decimal activityCreditHours,
+        decimal activityCreditDays,
         string? capturedImageUrl,
         DateTimeOffset attendedAt)
     {
@@ -61,7 +61,7 @@ public class Attendance : BaseEntity
             CapturedImageUrl = capturedImageUrl,
             ImageExpiresAt = attendedAt.AddDays(DefaultImageRetentionDays),
             Status = isInsideGeofence ? "APPROVED" : "PENDING",
-            CreditEarned = isInsideGeofence ? activityCreditHours : 0m,
+            CreditEarned = isInsideGeofence ? activityCreditDays : 0m,
             Note = isInsideGeofence
                 ? $"Điểm danh thành công (Cách hiện trường {distanceMeters:F0}m)"
                 : $"Ngoài vùng điểm danh ({distanceMeters:F0}m > {allowedRadiusMeters:F0}m)"
@@ -74,7 +74,7 @@ public class Attendance : BaseEntity
     public static Attendance CreateManual(
         Guid sessionId,
         Guid registrationId,
-        decimal creditHours,
+        decimal creditDays,
         Guid reviewerId,
         DateTimeOffset attendedAt,
         string? note)
@@ -90,7 +90,7 @@ public class Attendance : BaseEntity
             FaceSimilarity = 1.0m,
             IsLivenessVerified = true,
             Status = "APPROVED",
-            CreditEarned = creditHours,
+            CreditEarned = creditDays,
             ReviewedBy = reviewerId,
             ReviewedAt = attendedAt,
             Note = note ?? "Cán bộ điểm danh thủ công tại hiện trường"

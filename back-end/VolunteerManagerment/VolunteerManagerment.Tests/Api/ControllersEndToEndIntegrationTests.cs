@@ -303,7 +303,6 @@ public class ControllersEndToEndIntegrationTests : IDisposable
             DateTimeOffset.UtcNow.AddDays(2),
             DateTimeOffset.UtcNow.AddDays(2).AddHours(4),
             50,
-            4.0m,
             0.5m,
             [new CreateActivityLocationRequest("Sân trường DTHU", "783 Phạm Hữu Lầu", 10.4602m, 105.6425m, 150m)]);
 
@@ -329,7 +328,7 @@ public class ControllersEndToEndIntegrationTests : IDisposable
         // 4. Route/Body mismatch on UpdateActivity and ReviewActivityRegistration
         var updateMismatch = await controller.UpdateActivity(
             Guid.NewGuid(),
-            new UpdateActivityCommand(activityId, "Tên", null, DateTimeOffset.UtcNow.AddDays(2), DateTimeOffset.UtcNow.AddDays(3), 20, 4m, 0.5m, "OPEN", []),
+            new UpdateActivityCommand(activityId, "Tên", null, DateTimeOffset.UtcNow.AddDays(2), DateTimeOffset.UtcNow.AddDays(3), 20, 0.5m, "OPEN", []),
             CancellationToken.None);
         updateMismatch.Should().BeOfType<BadRequestObjectResult>();
 
@@ -372,7 +371,6 @@ public class ControllersEndToEndIntegrationTests : IDisposable
             StartTime = DateTimeOffset.UtcNow.AddHours(-1),
             EndTime = DateTimeOffset.UtcNow.AddHours(3),
             Capacity = 100,
-            CreditHours = 4m,
             CreditDays = 0.5m,
             Status = "ONGOING",
             CreatedBy = adminUser.Id,

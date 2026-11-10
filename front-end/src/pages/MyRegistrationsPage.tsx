@@ -24,6 +24,7 @@ import {
   formatDateTimeVN,
   getActivityStatusConfig,
   getRegistrationStatusBadge,
+  isCompletedBothAttendanceSessions,
 } from "@/lib/activity-helpers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -93,22 +94,27 @@ export function MyRegistrationsPage() {
         r.registrationStatus === "REGISTERED" ||
         r.registrationStatus === "PENDING",
     );
-    const totalDays = approved.reduce((sum, r) => sum + (r.creditDay || 0), 0);
-    const totalHours = approved.reduce(
-      (sum, r) => sum + (r.creditHour || 0),
+
+    // Chỉ công nhận ngày công khi hoàn thành đủ cả 2 lượt Check-in và Check-out (APPROVED)
+    const completedRegistrations = approved.filter((r) =>
+      isCompletedBothAttendanceSessions(r.attendances),
+    );
+    const totalDays = completedRegistrations.reduce(
+      (sum, r) => sum + (r.creditDay || 0),
       0,
     );
-    const attendedCount = registrations.filter(
-      (r) => r.attendances && r.attendances.length > 0,
-    ).length;
+    const expectedDays = approved.reduce(
+      (sum, r) => sum + (r.creditDay || 0),
+      0,
+    );
 
     return {
       total: registrations.length,
       approvedCount: approved.length,
       pendingCount: pending.length,
+      completedCount: completedRegistrations.length,
       totalDays,
-      totalHours,
-      attendedCount,
+      expectedDays,
     };
   }, [registrations]);
 
@@ -195,20 +201,27 @@ export function MyRegistrationsPage() {
           </Card>
           <Card className="border-slate-200/90 bg-white shadow-2xs">
             <CardContent className="p-4">
-              <p className="text-xs font-medium text-muted-foreground">Đã có minh chứng điểm danh</p>
+              <p className="text-xs font-medium text-muted-foreground">Đã đạt đủ 2/2 lượt</p>
               <p className="mt-1 text-2xl font-black text-indigo-600">
-                {stats.attendedCount}
+                {stats.completedCount}
               </p>
             </CardContent>
           </Card>
           <Card className="border-slate-200/90 bg-white shadow-2xs">
             <CardContent className="p-4">
               <p className="text-xs font-medium text-muted-foreground">
-                Tổng tích lũy dự kiến
+                Ngày công chính thức
               </p>
-              <p className="mt-1 text-xl font-black text-blue-600">
-                {stats.totalDays} ngày ({stats.totalHours}h)
-              </p>
+              <div className="flex items-baseline gap-1.5 mt-1">
+                <span className="text-2xl font-black text-blue-600">
+                  {stats.totalDays} ngày
+                </span>
+                {stats.expectedDays > stats.totalDays && (
+                  <span className="text-[11px] text-muted-foreground font-medium">
+                    (Dự kiến: {stats.expectedDays}d)
+                  </span>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -264,11 +277,16 @@ export function MyRegistrationsPage() {
               const attendances = item.attendances || [];
               const hasAttendances = attendances.length > 0;
               const hasCheckIn = attendances.some(
-                (a) => a.sessionType === "CHECK_IN" || a.sessionType?.toUpperCase().includes("IN"),
+                (a) =>
+                  (a.sessionType === "CHECK_IN" || a.sessionType?.toUpperCase().includes("IN")) &&
+                  a.status === "APPROVED",
               );
               const hasCheckOut = attendances.some(
-                (a) => a.sessionType === "CHECK_OUT" || a.sessionType?.toUpperCase().includes("OUT"),
+                (a) =>
+                  (a.sessionType === "CHECK_OUT" || a.sessionType?.toUpperCase().includes("OUT")) &&
+                  a.status === "APPROVED",
               );
+              const isCompletedBoth = hasCheckIn && hasCheckOut;
 
               return (
                 <Card
@@ -338,15 +356,20 @@ export function MyRegistrationsPage() {
                         <div className="min-w-0 flex-1 text-xs">
                           <p className="font-semibold text-slate-900 flex items-center gap-1.5">
                             Trạng thái điểm danh:
-                            {hasCheckIn && hasCheckOut ? (
+                            {isCompletedBoth ? (
                               <span className="text-emerald-700 font-bold inline-flex items-center gap-1">
                                 <CheckCircle2 className="size-3.5 text-emerald-600" />
-                                Đã hoàn thành 2/2 lượt
+                                Đã hoàn thành 2/2 lượt (Đạt ngày công)
                               </span>
                             ) : hasCheckIn ? (
                               <span className="text-blue-700 font-bold inline-flex items-center gap-1">
                                 <Clock className="size-3.5 text-blue-600" />
                                 Đã Check-in vào (Chưa Check-out)
+                              </span>
+                            ) : hasCheckOut ? (
+                              <span className="text-amber-700 font-bold inline-flex items-center gap-1">
+                                <Clock className="size-3.5 text-amber-600" />
+                                Đã Check-out ra (Thiếu Check-in)
                               </span>
                             ) : (
                               <span className="text-amber-700 font-medium">
@@ -385,10 +408,18 @@ export function MyRegistrationsPage() {
                         {formatDateTimeVN(item.startTime)} →{" "}
                         {formatDateTimeVN(item.endTime)}
                       </span>
-                      <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700">
-                        <Award className="size-3.5" />+{item.creditDay} ngày (
-                        <Clock className="size-3" /> {item.creditHour} giờ)
-                      </span>
+                      {isCompletedBoth ? (
+                        <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700">
+                          <Award className="size-3.5" />+{item.creditDay} ngày (Đã đạt)
+                        </span>
+                      ) : (
+                        <span
+                          className="inline-flex items-center gap-1.5 font-medium text-slate-500"
+                          title="Cần hoàn thành đủ 2 lượt Check-in và Check-out để được cộng ngày công"
+                        >
+                          <Award className="size-3.5 text-slate-400" />+{item.creditDay} ngày (Cần đủ 2 lượt)
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">

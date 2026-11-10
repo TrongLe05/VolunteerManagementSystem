@@ -25,6 +25,7 @@ import { FeedRightSidebar } from "@/components/feed/FeedRightSidebar";
 import { GuestHeroBanner } from "@/components/feed/GuestHeroBanner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { isCompletedBothAttendanceSessions } from "@/lib/activity-helpers";
 
 export default function Home() {
   const { user, isAuthenticated, hasRole } = useAuth();
@@ -117,7 +118,11 @@ export default function Home() {
     const approved = myRegistrations.filter(
       (r) => r.registrationStatus === "APPROVED",
     );
-    const totalDays = approved.reduce((sum, r) => sum + (r.creditDay || 0), 0);
+    // Chỉ tính ngày công tích lũy khi hoàn thành đủ cả 2 lượt Check-in và Check-out (APPROVED)
+    const completed = approved.filter((r) =>
+      isCompletedBothAttendanceSessions(r.attendances),
+    );
+    const totalDays = completed.reduce((sum, r) => sum + (r.creditDay || 0), 0);
     return {
       totalRegistered: myRegistrations.filter(
         (r) => r.registrationStatus !== "CANCELLED",

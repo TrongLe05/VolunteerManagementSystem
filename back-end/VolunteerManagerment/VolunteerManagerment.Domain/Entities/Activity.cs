@@ -12,7 +12,6 @@ public class Activity : BaseEntity, IAuditableEntity
     public DateTimeOffset StartTime { get; set; }
     public DateTimeOffset EndTime { get; set; }
     public int? Capacity { get; set; }
-    public decimal CreditHours { get; set; }
     public decimal CreditDays { get; set; }
     public string Status { get; set; } = "DRAFT";
     public Guid CreatedBy { get; set; }

@@ -96,7 +96,6 @@ public class UpdateActivityCommandHandlerTests
             DateTimeOffset.UtcNow.AddMinutes(-30),
             DateTimeOffset.UtcNow.AddHours(2),
             50,
-            2.0m,
             1.0m,
             "OPEN",
             new List<UpdateActivityLocationRequest>()
@@ -178,7 +177,6 @@ public class UpdateActivityCommandHandlerTests
             DateTimeOffset.UtcNow.AddHours(-3),
             DateTimeOffset.UtcNow.AddMinutes(-10),
             50,
-            2.0m,
             1.0m,
             "ONGOING",
             new List<UpdateActivityLocationRequest>()

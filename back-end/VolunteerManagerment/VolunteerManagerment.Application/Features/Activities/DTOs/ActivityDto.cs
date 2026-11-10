@@ -11,7 +11,6 @@ public record ActivityDto(
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     int? Capacity,
-    decimal CreditHours,
     decimal CreditDays,
     string Status,
     Guid CreatedBy,

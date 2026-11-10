@@ -10,9 +10,8 @@ public record CreateActivityCommand(
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     int? Capacity,
-    decimal CreditHours,
     decimal CreditDays,
-    List<CreateActivityLocationRequest> Locations
+    List<CreateActivityLocationRequest>? Locations = null
 ) : IRequest<Guid>;
 
 public record CreateActivityLocationRequest(

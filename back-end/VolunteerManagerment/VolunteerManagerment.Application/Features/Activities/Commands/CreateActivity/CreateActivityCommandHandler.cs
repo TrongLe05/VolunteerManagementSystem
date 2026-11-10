@@ -59,7 +59,6 @@ public class CreateActivityCommandHandler(
             StartTime = request.StartTime.ToUniversalTime(),
             EndTime = request.EndTime.ToUniversalTime(),
             Capacity = request.Capacity,
-            CreditHours = request.CreditHours,
             CreditDays = request.CreditDays,
             Status = "OPEN",
             CreatedBy = userId,

@@ -67,21 +67,54 @@ public class ManualMarkAttendanceCommandHandler(
         var existingAttendance = await context.Attendances
             .FirstOrDefaultAsync(a => a.ActivityRegistrationId == reg.Id && a.AttendanceSessionId == session.Id, cancellationToken);
 
+        var isCheckOut = string.Equals(sessionType, "CHECK_OUT", StringComparison.OrdinalIgnoreCase);
+        var hasApprovedCheckIn = false;
+        if (isCheckOut)
+        {
+            hasApprovedCheckIn = await context.Attendances
+                .AnyAsync(a => a.ActivityRegistrationId == reg.Id
+                            && a.AttendanceSession.Type == "CHECK_IN"
+                            && a.Status == "APPROVED", cancellationToken);
+        }
+
+        var creditDaysToAward = (isCheckOut && hasApprovedCheckIn)
+            ? reg.Activity.CreditDays
+            : 0m;
+
         if (existingAttendance != null)
         {
             existingAttendance.ApproveManually(userId, now, request.Note);
+            if (isCheckOut && hasApprovedCheckIn)
+            {
+                existingAttendance.CreditEarned = reg.Activity.CreditDays;
+            }
         }
         else
         {
             var attendance = Attendance.CreateManual(
                 sessionId: session.Id,
                 registrationId: reg.Id,
-                creditHours: reg.Activity.CreditHours,
+                creditDays: creditDaysToAward,
                 reviewerId: userId,
                 attendedAt: now,
                 note: request.Note
             );
             context.Attendances.Add(attendance);
+        }
+
+        // Nếu vừa đánh dấu CHECK_IN thành công và trước đó sinh viên đã có bản ghi CHECK_OUT APPROVED,
+        // kích hoạt CreditEarned cho bản ghi CHECK_OUT đó để đủ điều kiện 2/2 lượt
+        if (!isCheckOut)
+        {
+            var existingCheckOut = await context.Attendances
+                .Include(a => a.AttendanceSession)
+                .FirstOrDefaultAsync(a => a.ActivityRegistrationId == reg.Id
+                                       && a.AttendanceSession.Type == "CHECK_OUT"
+                                       && a.Status == "APPROVED", cancellationToken);
+            if (existingCheckOut != null)
+            {
+                existingCheckOut.CreditEarned = reg.Activity.CreditDays;
+            }
         }
 
         await context.SaveChangesAsync(cancellationToken);

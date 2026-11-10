@@ -14,7 +14,10 @@ import {
 } from "lucide-react";
 
 import type { MyActivityRegistration, MyAttendanceRecord } from "@/types/volunteer.types";
-import { formatDateTimeVN } from "@/lib/activity-helpers";
+import {
+  formatDateTimeVN,
+  isCompletedBothAttendanceSessions,
+} from "@/lib/activity-helpers";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +53,11 @@ export function AttendanceHistoryDialog({
   const checkOutRecord = attendances.find(
     (a) => a.sessionType === "CHECK_OUT" || a.sessionType?.toUpperCase().includes("OUT"),
   );
+
+  const isBothApproved = isCompletedBothAttendanceSessions(attendances);
+  const approvedCount =
+    (checkInRecord?.status === "APPROVED" ? 1 : 0) +
+    (checkOutRecord?.status === "APPROVED" ? 1 : 0);
 
   return (
     <>
@@ -111,10 +119,23 @@ export function AttendanceHistoryDialog({
               </div>
 
               <div className="col-span-2 sm:col-span-1 rounded-lg bg-white/10 p-2.5 backdrop-blur-xs border border-white/10">
-                <p className="text-[11px] text-blue-200">Tích lũy ghi nhận</p>
-                <p className="mt-0.5 font-bold text-amber-300">
-                  +{registration.creditDay} ngày ({registration.creditHour}h)
-                </p>
+                <p className="text-[11px] text-blue-200">Tích lũy ngày công</p>
+                <div className="mt-0.5 flex flex-wrap items-baseline gap-1.5">
+                  <span className={`text-base font-bold ${isBothApproved ? "text-amber-300" : "text-slate-300"}`}>
+                    {isBothApproved ? `+${registration.creditDay} ngày` : "0 ngày"}
+                  </span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                      isBothApproved
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                        : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                    }`}
+                  >
+                    {isBothApproved
+                      ? "Đạt đủ 2/2 lượt"
+                      : `Cần đủ 2 lượt (${approvedCount}/2)`}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

@@ -9,10 +9,9 @@ public record UpdateActivityCommand(
     DateTimeOffset StartTime,
     DateTimeOffset EndTime,
     int? Capacity,
-    decimal CreditHours,
     decimal CreditDays,
-    string Status,
-    List<UpdateActivityLocationRequest> Locations
+    string? Status = null,
+    List<UpdateActivityLocationRequest>? Locations = null
 ) : IRequest<bool>;
 
 public record UpdateActivityLocationRequest(

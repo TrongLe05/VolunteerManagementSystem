@@ -43,7 +43,12 @@ public class GetMyActivityRegistrationsQueryHandler(
                 r.Activity.StartTime,
                 r.Activity.EndTime,
                 r.Activity.CreditDays,
-                r.Activity.CreditHours,
+                (r.Attendances.Any(a => a.AttendanceSession.Type == "CHECK_IN" && a.Status == "APPROVED")
+                    && r.Attendances.Any(a => a.AttendanceSession.Type == "CHECK_OUT" && a.Status == "APPROVED"))
+                    ? r.Activity.CreditDays
+                    : 0m,
+                r.Attendances.Any(a => a.AttendanceSession.Type == "CHECK_IN" && a.Status == "APPROVED")
+                    && r.Attendances.Any(a => a.AttendanceSession.Type == "CHECK_OUT" && a.Status == "APPROVED"),
                 r.Activity.Status,
                 r.Status,
                 r.RegisteredAt,

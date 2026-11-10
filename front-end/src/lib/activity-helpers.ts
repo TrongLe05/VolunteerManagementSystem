@@ -116,3 +116,25 @@ export function getRegistrationStatusBadge(status?: string | null) {
       return null;
   }
 }
+
+/**
+ * Kiểm tra xem tình nguyện viên đã hoàn thành đủ cả 2 lượt Check-in và Check-out (đều đã APPROVED) hay chưa.
+ * Chỉ khi đủ cả 2 lượt mới được chính thức ghi nhận ngày công của hoạt động.
+ */
+export function isCompletedBothAttendanceSessions(
+  attendances?: { sessionType?: string | null; status?: string | null }[] | null,
+): boolean {
+  if (!attendances || attendances.length === 0) return false;
+  const hasIn = attendances.some(
+    (a) =>
+      (a.sessionType === "CHECK_IN" || a.sessionType?.toUpperCase().includes("IN")) &&
+      a.status === "APPROVED",
+  );
+  const hasOut = attendances.some(
+    (a) =>
+      (a.sessionType === "CHECK_OUT" || a.sessionType?.toUpperCase().includes("OUT")) &&
+      a.status === "APPROVED",
+  );
+  return hasIn && hasOut;
+}
+

@@ -36,7 +36,7 @@ public class AttendanceDomainTests
             isInsideGeofence: true,
             distanceMeters: 25m,
             allowedRadiusMeters: 150m,
-            activityCreditHours: 4.5m,
+            activityCreditDays: 1.0m,
             capturedImageUrl: "https://storage/checkin.jpg",
             attendedAt: now
         );
@@ -44,7 +44,7 @@ public class AttendanceDomainTests
         insideAttendance.Status.Should().Be("APPROVED");
         insideAttendance.LocationStatus.Should().Be("VALID");
         insideAttendance.VerificationMethod.Should().Be("FACE_RECOGNITION");
-        insideAttendance.CreditEarned.Should().Be(4.5m);
+        insideAttendance.CreditEarned.Should().Be(1.0m);
         insideAttendance.ImageExpiresAt.Should().Be(now.AddDays(Attendance.DefaultImageRetentionDays));
 
         var outsideAttendance = Attendance.CreateGeofenceFaceCheckIn(
@@ -55,7 +55,7 @@ public class AttendanceDomainTests
             isInsideGeofence: false,
             distanceMeters: 420m,
             allowedRadiusMeters: 150m,
-            activityCreditHours: 4.5m,
+            activityCreditDays: 1.0m,
             capturedImageUrl: "https://storage/checkin_out.jpg",
             attendedAt: now
         );
@@ -75,7 +75,7 @@ public class AttendanceDomainTests
         var manualWithDefaultNote = Attendance.CreateManual(
             sessionId: Guid.NewGuid(),
             registrationId: Guid.NewGuid(),
-            creditHours: 3.0m,
+            creditDays: 0.5m,
             reviewerId: reviewerId,
             attendedAt: now,
             note: null
@@ -84,7 +84,7 @@ public class AttendanceDomainTests
         manualWithDefaultNote.Status.Should().Be("APPROVED");
         manualWithDefaultNote.LocationStatus.Should().Be("VALID");
         manualWithDefaultNote.VerificationMethod.Should().Be("MANUAL");
-        manualWithDefaultNote.CreditEarned.Should().Be(3.0m);
+        manualWithDefaultNote.CreditEarned.Should().Be(0.5m);
         manualWithDefaultNote.ReviewedBy.Should().Be(reviewerId);
         manualWithDefaultNote.Note.Should().Be("Cán bộ điểm danh thủ công tại hiện trường");
 

@@ -43,7 +43,7 @@ public class CheckInCommandHandlerTests
         {
             Id = Guid.NewGuid(),
             Name = "Chiến dịch Mùa hè xanh 2026",
-            CreditHours = 4.0m,
+            CreditDays = 1.0m,
             StartTime = DateTimeOffset.UtcNow.AddHours(-1),
             EndTime = DateTimeOffset.UtcNow.AddHours(3),
             Status = "ONGOING",
@@ -107,7 +107,101 @@ public class CheckInCommandHandlerTests
         recordInDb!.Status.Should().Be("APPROVED");
         recordInDb.LocationStatus.Should().Be("VALID");
         recordInDb.VerificationMethod.Should().Be("FACE_RECOGNITION");
-        recordInDb.CreditEarned.Should().Be(4.0m);
+        recordInDb.CreditEarned.Should().Be(0m); // CHECK_IN lượt đầu chưa công nhận ngày công (phải đủ 2 lượt)
+    }
+
+    [Fact]
+    public async Task Handle_WhenCheckOutWithApprovedCheckIn_ShouldAwardActivityCreditDays()
+    {
+        // Arrange
+        var context = CreateInMemoryDbContext();
+        var userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(s => s.UserId).Returns(userId);
+
+        var volunteer = new Volunteer { Id = Guid.NewGuid(), UserId = userId, FullName = "Nguyễn Văn C" };
+        var activity = new Activity
+        {
+            Id = Guid.NewGuid(),
+            Name = "Chiến dịch Mùa hè xanh 2026",
+            CreditDays = 1.0m,
+            StartTime = DateTimeOffset.UtcNow.AddHours(-2),
+            EndTime = DateTimeOffset.UtcNow.AddHours(2),
+            Status = "ONGOING",
+            Locations = new List<ActivityLocation>
+            {
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    Latitude = 10.4550000m,
+                    Longitude = 105.6320000m,
+                    AllowedRadiusMeters = 150m
+                }
+            }
+        };
+        var registration = new ActivityRegistration
+        {
+            Id = Guid.NewGuid(),
+            ActivityId = activity.Id,
+            VolunteerId = volunteer.Id,
+            Status = "APPROVED",
+            Activity = activity
+        };
+
+        var checkInSession = new AttendanceSession
+        {
+            Id = Guid.NewGuid(),
+            ActivityId = activity.Id,
+            Type = "CHECK_IN",
+            StartedAt = DateTimeOffset.UtcNow.AddHours(-2),
+            EndedAt = DateTimeOffset.UtcNow.AddHours(-1)
+        };
+        var checkOutSession = new AttendanceSession
+        {
+            Id = Guid.NewGuid(),
+            ActivityId = activity.Id,
+            Type = "CHECK_OUT",
+            StartedAt = DateTimeOffset.UtcNow.AddMinutes(-5),
+            EndedAt = DateTimeOffset.UtcNow.AddMinutes(5)
+        };
+
+        // Đã có bản ghi CHECK_IN APPROVED trước đó
+        var checkInAttendance = new Attendance
+        {
+            Id = Guid.NewGuid(),
+            AttendanceSessionId = checkInSession.Id,
+            ActivityRegistrationId = registration.Id,
+            Status = "APPROVED",
+            LocationStatus = "VALID",
+            CreditEarned = 0m,
+            AttendedAt = DateTimeOffset.UtcNow.AddHours(-2)
+        };
+
+        context.Volunteers.Add(volunteer);
+        context.Activities.Add(activity);
+        context.ActivityRegistrations.Add(registration);
+        context.AttendanceSessions.AddRange(checkInSession, checkOutSession);
+        context.Attendances.Add(checkInAttendance);
+        await context.SaveChangesAsync();
+
+        var handler = new CheckInCommandHandler(context, _currentUserServiceMock.Object, _storageServiceMock.Object);
+
+        // Act: Điểm danh CHECK_OUT trong vùng hợp lệ
+        var command = new CheckInCommand(
+            ActivityId: activity.Id,
+            Latitude: 10.4551000m,
+            Longitude: 105.6321000m,
+            LocationAccuracyMeters: 5m,
+            CapturedImageBase64: null
+        );
+
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        var checkOutRecord = await context.Attendances.FirstOrDefaultAsync(a => a.AttendanceSessionId == checkOutSession.Id);
+        checkOutRecord.Should().NotBeNull();
+        checkOutRecord!.Status.Should().Be("APPROVED");
+        checkOutRecord.CreditEarned.Should().Be(1.0m); // Đã đủ 2/2 lượt nên đạt đủ 1.0 ngày công
     }
 
     [Fact]
@@ -123,7 +217,7 @@ public class CheckInCommandHandlerTests
         {
             Id = Guid.NewGuid(),
             Name = "Tiếp sức mùa thi DThU",
-            CreditHours = 2.0m,
+            CreditDays = 0.5m,
             StartTime = DateTimeOffset.UtcNow.AddHours(-1),
             EndTime = DateTimeOffset.UtcNow.AddHours(2),
             Status = "ONGOING",

@@ -90,7 +90,6 @@ public class GetAdminActivitiesQueryHandler(
                 a.StartTime,
                 a.EndTime,
                 a.Capacity,
-                a.CreditHours,
                 a.CreditDays,
                 a.Status,
                 a.CreatedBy,

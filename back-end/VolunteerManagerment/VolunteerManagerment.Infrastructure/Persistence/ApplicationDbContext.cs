@@ -98,7 +98,6 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
             entity.ToTable("activities");
             entity.Property(a => a.Name).HasMaxLength(255).IsRequired();
             entity.Property(a => a.Status).HasMaxLength(30).IsRequired().HasDefaultValue("DRAFT");
-            entity.Property(a => a.CreditHours).HasPrecision(4, 2);
             entity.Property(a => a.CreditDays).HasPrecision(3, 1);
             entity.HasOne(a => a.Campaign)
                 .WithMany(c => c.Activities)

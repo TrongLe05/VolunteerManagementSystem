@@ -58,7 +58,6 @@ public class CreateAndDeleteActivityHandlerTests
             StartTime: new DateTimeOffset(2026, 6, 15, 7, 0, 0, TimeSpan.FromHours(7)),
             EndTime: new DateTimeOffset(2026, 6, 15, 11, 0, 0, TimeSpan.FromHours(7)),
             Capacity: 100,
-            CreditHours: 4.0m,
             CreditDays: 0.5m,
             Locations: new List<CreateActivityLocationRequest>
             {
@@ -117,7 +116,6 @@ public class CreateAndDeleteActivityHandlerTests
             StartTime: new DateTimeOffset(2026, 7, 5, 7, 0, 0, TimeSpan.FromHours(7)),
             EndTime: new DateTimeOffset(2026, 7, 5, 11, 0, 0, TimeSpan.FromHours(7)),
             Capacity: 50,
-            CreditHours: 4m,
             CreditDays: 0.5m,
             Locations: []
         );

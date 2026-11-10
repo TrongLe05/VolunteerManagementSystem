@@ -56,7 +56,7 @@ public class ManualMarkAttendanceCommandHandlerTests
             Campaign = campaign,
             Name = "Tặng quà Tết",
             Status = "ONGOING",
-            CreditHours = 5.0m
+            CreditDays = 1.0m
         };
         var registration = new ActivityRegistration
         {
@@ -87,8 +87,94 @@ public class ManualMarkAttendanceCommandHandlerTests
         attendance!.Status.Should().Be("APPROVED");
         attendance.LocationStatus.Should().Be("VALID");
         attendance.VerificationMethod.Should().Be("MANUAL");
-        attendance.CreditEarned.Should().Be(5.0m);
+        attendance.CreditEarned.Should().Be(0m); // CHECK_IN chưa hoàn tất cả 2 lượt
         attendance.Note.Should().Be("Điểm danh bù tại bàn");
+    }
+
+    [Fact]
+    public async Task Handle_WhenManualMarkCheckOutWithApprovedCheckIn_ShouldAwardCreditDays()
+    {
+        var context = CreateInMemoryDbContext();
+        var userId = Guid.NewGuid();
+        var regId = Guid.NewGuid();
+        var activityId = Guid.NewGuid();
+        var campaignId = Guid.NewGuid();
+        var orgId = Guid.NewGuid();
+
+        _currentUserServiceMock.Setup(s => s.UserId).Returns(userId);
+        var orgAdmin = new User
+        {
+            Id = userId,
+            Username = "orgadmin2",
+            OrganizationId = orgId,
+            UserRoles = new List<UserRole>
+            {
+                new() { Role = new Role { Code = "ORGANIZATION_ADMIN" } }
+            }
+        };
+        _userRepositoryMock.Setup(r => r.GetByIdWithDetailsAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(orgAdmin);
+        _organizationRepositoryMock.Setup(r => r.GetSubOrganizationIdsAsync(orgId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Guid> { orgId });
+
+        var act = new Activity
+        {
+            Id = activityId,
+            Name = "Hoạt động thử nghiệm 2",
+            CreditDays = 1.0m,
+            Campaign = new Campaign
+            {
+                Id = campaignId,
+                Name = "Chiến dịch 2",
+                OrganizationId = orgId
+            }
+        };
+
+        var reg = new ActivityRegistration
+        {
+            Id = regId,
+            ActivityId = activityId,
+            Activity = act,
+            Status = "APPROVED"
+        };
+
+        var checkInSession = new AttendanceSession
+        {
+            Id = Guid.NewGuid(),
+            ActivityId = activityId,
+            Type = "CHECK_IN",
+            StartedAt = DateTimeOffset.UtcNow.AddHours(-1)
+        };
+        var checkInAttendance = new Attendance
+        {
+            Id = Guid.NewGuid(),
+            AttendanceSessionId = checkInSession.Id,
+            ActivityRegistrationId = regId,
+            Status = "APPROVED",
+            CreditEarned = 0m,
+            AttendedAt = DateTimeOffset.UtcNow.AddHours(-1)
+        };
+
+        context.Activities.Add(act);
+        context.ActivityRegistrations.Add(reg);
+        context.AttendanceSessions.Add(checkInSession);
+        context.Attendances.Add(checkInAttendance);
+        await context.SaveChangesAsync();
+
+        var handler = new ManualMarkAttendanceCommandHandler(
+            context,
+            _currentUserServiceMock.Object,
+            _userRepositoryMock.Object,
+            _organizationRepositoryMock.Object
+        );
+
+        var result = await handler.Handle(new ManualMarkAttendanceCommand(regId, "CHECK_OUT", "Điểm danh ra hoàn thành"), CancellationToken.None);
+
+        result.Should().BeTrue();
+        var checkOut = await context.Attendances.FirstOrDefaultAsync(a => a.ActivityRegistrationId == regId && a.AttendanceSession.Type == "CHECK_OUT");
+        checkOut.Should().NotBeNull();
+        checkOut!.Status.Should().Be("APPROVED");
+        checkOut.CreditEarned.Should().Be(1.0m);
     }
 
     [Fact]

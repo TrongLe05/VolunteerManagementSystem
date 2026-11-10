@@ -247,16 +247,9 @@ export function ActivityPostCard({
                   </span>
                 </div>
 
-                {(activity.creditDays > 0 || activity.creditHours > 0) && (
+                {activity.creditDays > 0 && (
                   <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-amber-500/90 backdrop-blur-md px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
-                    <Award className="size-3.5" />+
-                    {activity.creditDays > 0
-                      ? `${activity.creditDays} ngày`
-                      : ""}
-                    {activity.creditDays > 0 &&
-                      activity.creditHours > 0 &&
-                      " • "}
-                    {activity.creditHours > 0 ? `${activity.creditHours}h` : ""}
+                    <Award className="size-3.5" />+{activity.creditDays} ngày
                   </span>
                 )}
               </div>

@@ -82,7 +82,6 @@ export interface Activity {
   startTime: string;
   endTime: string;
   capacity: number | null;
-  creditHours: number;
   creditDays: number;
   status: ActivityStatus | string;
   createdBy: string;
@@ -98,7 +97,6 @@ export interface CreateActivityRequest {
   startTime: string;
   endTime: string;
   capacity: number | null;
-  creditHours: number;
   creditDays: number;
   locations: ActivityLocationInput[];
 }
@@ -110,7 +108,6 @@ export interface UpdateActivityRequest {
   startTime: string;
   endTime: string;
   capacity: number | null;
-  creditHours: number;
   creditDays: number;
   status: string;
   locations: ActivityLocationInput[];
@@ -147,7 +144,8 @@ export interface MyActivityRegistration {
   startTime: string;
   endTime: string;
   creditDay: number;
-  creditHour: number;
+  earnedCreditDays?: number;
+  isAttendanceCompleted?: boolean;
   activityStatus: string;
   registrationStatus: RegistrationStatus | string;
   registeredAt: string;

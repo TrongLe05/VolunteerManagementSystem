@@ -53,7 +53,6 @@ public class UpdateActivityCommandHandler(
         activity.StartTime = request.StartTime.ToUniversalTime();
         activity.EndTime = request.EndTime.ToUniversalTime();
         activity.Capacity = request.Capacity;
-        activity.CreditHours = request.CreditHours;
         activity.CreditDays = request.CreditDays;
 
         var now = DateTimeOffset.UtcNow;

@@ -615,8 +615,6 @@ export const DetailActivitiesPage = () => {
               <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-500/20 via-yellow-500/20 to-amber-500/20 px-3.5 py-1 text-xs font-bold text-amber-200 backdrop-blur-md shadow-xs">
                 <Award className="size-4 text-amber-400 shrink-0" />
                 <span>+{activity.creditDays} ngày CTXH</span>
-                <span className="text-amber-400/50">•</span>
-                <span>{activity.creditHours} giờ rèn luyện</span>
               </div>
             </div>
 
@@ -738,13 +736,12 @@ export const DetailActivitiesPage = () => {
                   Quyền lợi Tình nguyện viên
                 </CardTitle>
                 <CardDescription>
-                  Chế độ ghi nhận ngày công tác xã hội và giờ rèn luyện sinh
-                  viên ĐH Đồng Tháp
+                  Chế độ ghi nhận ngày công tác xã hội cho sinh viên ĐH Đồng Tháp
                 </CardDescription>
               </CardHeader>
               <Separator />
               <CardContent className="pt-4">
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="flex flex-col items-center justify-center rounded-xl border border-blue-100 bg-blue-50/50 p-4 text-center">
                     <span className="text-2xl font-black text-blue-700">
                       +{activity.creditDays}
@@ -753,19 +750,7 @@ export const DetailActivitiesPage = () => {
                       Ngày tình nguyện
                     </span>
                     <span className="text-[11px] text-muted-foreground mt-0.5">
-                      Tính vào tiêu chí CTXH
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col items-center justify-center rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 text-center">
-                    <span className="text-2xl font-black text-indigo-700">
-                      +{activity.creditHours}
-                    </span>
-                    <span className="text-xs font-semibold text-slate-700 mt-0.5">
-                      Giờ hoạt động
-                    </span>
-                    <span className="text-[11px] text-muted-foreground mt-0.5">
-                      Điểm rèn luyện sinh viên
+                      Tính vào tiêu chí CTXH & rèn luyện
                     </span>
                   </div>
 

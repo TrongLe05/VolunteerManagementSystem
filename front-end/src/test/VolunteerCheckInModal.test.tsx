@@ -15,7 +15,6 @@ const mockActivity: Activity = {
   startTime: "2026-11-04T07:00:00Z",
   endTime: "2026-11-04T11:00:00Z",
   capacity: 100,
-  creditHours: 4,
   creditDays: 0.5,
   status: "ONGOING",
   createdBy: "admin-1",

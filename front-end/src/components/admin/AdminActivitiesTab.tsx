@@ -108,7 +108,6 @@ export function AdminActivitiesTab({
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [capacity, setCapacity] = useState<string>("50");
   const [creditDays, setCreditDays] = useState<string>("1");
-  const [creditHours, setCreditHours] = useState<string>("4");
   const [selectedStatus, setSelectedStatus] = useState<StatusOption>(
     ACTIVITY_STATUS_LIST[1],
   );
@@ -133,7 +132,6 @@ export function AdminActivitiesTab({
     setEndDate(new Date(defaultTimes.end));
     setCapacity("50");
     setCreditDays("1");
-    setCreditHours("4");
     setSelectedStatus(ACTIVITY_STATUS_LIST[1]);
     setLocations([
       {
@@ -158,7 +156,6 @@ export function AdminActivitiesTab({
     setEndDate(end);
     setCapacity(act.capacity ? String(act.capacity) : "50");
     setCreditDays(String(act.creditDays));
-    setCreditHours(String(act.creditHours));
 
     // Tự động suy luận trạng thái chuẩn xác theo thời gian nếu không phải DRAFT hoặc CANCELLED
     let targetStatus = act.status;
@@ -257,7 +254,6 @@ export function AdminActivitiesTab({
             endTime: endIso,
             capacity: capacity ? Number(capacity) : 50,
             creditDays: Number(creditDays),
-            creditHours: Number(creditHours),
             status: selectedStatus.value,
             locations,
           }),
@@ -282,7 +278,6 @@ export function AdminActivitiesTab({
             endTime: endIso,
             capacity: capacity ? Number(capacity) : 50,
             creditDays: Number(creditDays),
-            creditHours: Number(creditHours),
             locations,
           }),
           {
@@ -398,7 +393,7 @@ export function AdminActivitiesTab({
                             <strong>{act.capacity || "Không GH"}</strong>
                           </div>
                           <div className="text-emerald-700 font-medium">
-                            +{act.creditDays} ngày ({act.creditHours}h)
+                            +{act.creditDays} ngày
                           </div>
                         </TableCell>
                         <TableCell>
@@ -559,7 +554,7 @@ export function AdminActivitiesTab({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Chỉ tiêu (TNV)</Label>
                 <Input
@@ -578,17 +573,6 @@ export function AdminActivitiesTab({
                   min={0}
                   value={creditDays}
                   onChange={(e) => setCreditDays(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Giờ công (+Giờ)</Label>
-                <Input
-                  type="number"
-                  step="0.5"
-                  min={0}
-                  value={creditHours}
-                  onChange={(e) => setCreditHours(e.target.value)}
                   required
                 />
               </div>

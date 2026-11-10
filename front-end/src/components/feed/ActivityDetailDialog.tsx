@@ -82,7 +82,7 @@ export function ActivityDetailDialog({
                 Quyền lợi Tình nguyện viên
               </p>
               <p className="font-semibold text-emerald-700">
-                +{activity.creditDays} ngày ({activity.creditHours} giờ)
+                +{activity.creditDays} ngày CTXH
               </p>
             </div>
             <div className="rounded-lg border p-3">

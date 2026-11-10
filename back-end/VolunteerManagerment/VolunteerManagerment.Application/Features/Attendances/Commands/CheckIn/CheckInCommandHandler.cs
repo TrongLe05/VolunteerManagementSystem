@@ -78,7 +78,22 @@ public class CheckInCommandHandler(
             }
         }
 
-        // 7. Khởi tạo Attendance qua Domain Factory Method
+        // 7. Xác định ngày công ghi nhận: Chỉ công nhận khi là phiên CHECK_OUT và đã có lượt CHECK_IN hợp lệ (APPROVED)
+        var isCheckOut = string.Equals(activeSession.Type, "CHECK_OUT", StringComparison.OrdinalIgnoreCase);
+        var hasApprovedCheckIn = false;
+        if (isCheckOut)
+        {
+            hasApprovedCheckIn = await context.Attendances
+                .AnyAsync(a => a.ActivityRegistrationId == registration.Id
+                            && a.AttendanceSession.Type == "CHECK_IN"
+                            && a.Status == "APPROVED", cancellationToken);
+        }
+
+        var creditDaysToAward = (isCheckOut && hasApprovedCheckIn)
+            ? registration.Activity.CreditDays
+            : 0m;
+
+        // 8. Khởi tạo Attendance qua Domain Factory Method
         var attendance = Attendance.CreateGeofenceFaceCheckIn(
             sessionId: activeSession.Id,
             registrationId: registration.Id,
@@ -87,7 +102,7 @@ public class CheckInCommandHandler(
             isInsideGeofence: isInside,
             distanceMeters: minDistance,
             allowedRadiusMeters: allowedRadius,
-            activityCreditHours: registration.Activity.CreditHours,
+            activityCreditDays: creditDaysToAward,
             capturedImageUrl: capturedPhotoUrl,
             attendedAt: now
         );

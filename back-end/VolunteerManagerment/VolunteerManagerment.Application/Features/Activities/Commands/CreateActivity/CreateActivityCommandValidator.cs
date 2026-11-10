@@ -12,8 +12,6 @@ public class CreateActivityCommandValidator : AbstractValidator<CreateActivityCo
             .NotEmpty().WithMessage("Tên hoạt động không được trống.");
         RuleFor(x => x.EndTime)
             .GreaterThanOrEqualTo(x => x.StartTime).WithMessage("Thời gian kết thúc phải lớn hơn hoặc bằng thời gian bắt đầu.");
-        RuleFor(x => x.CreditHours)
-            .GreaterThanOrEqualTo(0).WithMessage("Số giờ tín chỉ phải lớn hơn hoặc bằng 0.");
         RuleFor(x => x.CreditDays)
             .GreaterThanOrEqualTo(0).WithMessage("Số ngày tín chỉ phải lớn hơn hoặc bằng 0.");
         RuleFor(x => x.Capacity)
