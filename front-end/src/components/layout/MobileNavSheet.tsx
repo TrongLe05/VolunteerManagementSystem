@@ -117,7 +117,7 @@ export function MobileNavSheet({
               <div className="flex items-center gap-3">
                 <Avatar className="size-10 shrink-0">
                   <AvatarImage
-                    src="https://github.com/shadcn.png"
+                    src={user.avatarUrl || "https://github.com/shadcn.png"}
                     alt={user.username}
                   />
                   <AvatarFallback className="text-xs font-semibold">
