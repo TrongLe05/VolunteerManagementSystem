@@ -1,10 +1,13 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VolunteerManagerment.Application.Features.Volunteers.Commands.GrantManualCredit;
 using VolunteerManagerment.Application.Features.Volunteers.Commands.ImportVolunteersFromExcel;
 using VolunteerManagerment.Application.Features.Volunteers.Commands.UpdateMyProfile;
+using VolunteerManagerment.Application.Features.Volunteers.Queries.GetMyCreditHistory;
 using VolunteerManagerment.Application.Features.Volunteers.Queries.GetMyProfile;
 using VolunteerManagerment.Application.Features.Volunteers.Queries.GetVolunteerByIdQuery;
+using VolunteerManagerment.Application.Features.Volunteers.Queries.GetVolunteerCreditHistory;
 using VolunteerManagerment.Application.Features.Volunteers.Queries.GetVolunteers;
 
 namespace VolunteerManagerment.API.Controllers
@@ -18,6 +21,13 @@ namespace VolunteerManagerment.API.Controllers
         public async Task<IActionResult> GetMyProfile(CancellationToken cancellationToken)
         {
             var result = await sender.Send(new GetMyProfileQuery(), cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet("me/credits")]
+        public async Task<IActionResult> GetMyCredits(CancellationToken cancellationToken)
+        {
+            var result = await sender.Send(new GetMyCreditHistoryQuery(), cancellationToken);
             return Ok(result);
         }
 
@@ -41,6 +51,26 @@ namespace VolunteerManagerment.API.Controllers
         public async Task<IActionResult> GetVolunteerById([FromRoute] Guid id, CancellationToken cancellationToken)
         {
             var result = await sender.Send(new GetVolunteerByIdQuery(id), cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpGet("{id}/credits")]
+        [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN")]
+        public async Task<IActionResult> GetVolunteerCredits([FromRoute] Guid id, CancellationToken cancellationToken)
+        {
+            var result = await sender.Send(new GetVolunteerCreditHistoryQuery(id), cancellationToken);
+            return Ok(result);
+        }
+
+        [HttpPost("{id}/credits/manual-grant")]
+        [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN")]
+        public async Task<IActionResult> GrantManualCredit([FromRoute] Guid id, [FromBody] GrantManualCreditCommand command, CancellationToken cancellationToken)
+        {
+            if (id != command.VolunteerId)
+            {
+                command = command with { VolunteerId = id };
+            }
+            var result = await sender.Send(command, cancellationToken);
             return Ok(result);
         }
 

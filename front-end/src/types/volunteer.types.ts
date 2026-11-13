@@ -186,3 +186,40 @@ export interface VolunteerProfile {
   consentFaceAuth: boolean;
   consentGivenAt: string | null;
 }
+
+export interface VolunteerCreditRecord {
+  id: string;
+  activityId?: string | null;
+  activityName?: string | null;
+  activityRegistrationId?: string | null;
+  creditDays: number;
+  recordType:
+    | "ACTIVITY_COMPLETION"
+    | "MANUAL_AWARD"
+    | "BLOOD_DONATION"
+    | "ADJUSTMENT"
+    | "PENALTY"
+    | string;
+  awardedAt: string;
+  awardedBy?: string | null;
+  awardedByName?: string | null;
+  reason?: string | null;
+  status: "OFFICIAL" | "REVOKED" | string;
+}
+
+export interface VolunteerCreditSummary {
+  volunteerId: string;
+  fullName: string;
+  studentCode?: string | null;
+  totalCreditDays: number;
+  totalOfficialRecords: number;
+  records: VolunteerCreditRecord[];
+}
+
+export interface GrantManualCreditRequest {
+  volunteerId: string;
+  creditDays: number;
+  recordType: string;
+  reason: string;
+  activityId?: string | null;
+}

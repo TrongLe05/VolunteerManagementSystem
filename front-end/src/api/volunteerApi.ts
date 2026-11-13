@@ -1,5 +1,11 @@
 import axiosClient from "@/api/axiosClient";
-import type { PageResult, VolunteerProfile } from "@/types/volunteer.types";
+import type {
+  GrantManualCreditRequest,
+  PageResult,
+  VolunteerCreditRecord,
+  VolunteerCreditSummary,
+  VolunteerProfile,
+} from "@/types/volunteer.types";
 
 export interface GetVolunteersParams {
   searchTerm?: string;
@@ -50,6 +56,32 @@ export const volunteerApi = {
         "Content-Type": "multipart/form-data",
       },
     });
+    return response.data;
+  },
+
+  getMyCredits: async (): Promise<VolunteerCreditSummary> => {
+    const response =
+      await axiosClient.get<VolunteerCreditSummary>("/volunteers/me/credits");
+    return response.data;
+  },
+
+  getVolunteerCredits: async (
+    volunteerId: string,
+  ): Promise<VolunteerCreditSummary> => {
+    const response = await axiosClient.get<VolunteerCreditSummary>(
+      `/volunteers/${volunteerId}/credits`,
+    );
+    return response.data;
+  },
+
+  grantManualCredit: async (
+    volunteerId: string,
+    data: GrantManualCreditRequest,
+  ): Promise<VolunteerCreditRecord> => {
+    const response = await axiosClient.post<VolunteerCreditRecord>(
+      `/volunteers/${volunteerId}/credits/manual-grant`,
+      data,
+    );
     return response.data;
   },
 };

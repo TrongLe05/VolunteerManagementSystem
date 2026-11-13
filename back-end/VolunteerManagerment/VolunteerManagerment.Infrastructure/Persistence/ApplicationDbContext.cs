@@ -22,6 +22,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     public DbSet<ActivityRegistration> ActivityRegistrations => Set<ActivityRegistration>();
     public DbSet<Attendance> Attendances => Set<Attendance>();
     public DbSet<AttendanceSession> AttendanceSessions => Set<AttendanceSession>();
+    public DbSet<VolunteerCreditRecord> VolunteerCreditRecords => Set<VolunteerCreditRecord>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -204,6 +205,40 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
 
             entity.HasIndex(a => a.UserId).HasDatabaseName("idx_audit_logs_user_id");
             entity.HasIndex(a => new { a.EntityType, a.EntityId }).HasDatabaseName("idx_audit_logs_entity");
+        });
+
+        modelBuilder.Entity<VolunteerCreditRecord>(entity =>
+        {
+            entity.ToTable("volunteer_credit_records");
+            entity.HasKey(r => r.Id);
+            entity.Property(r => r.CreditDays).HasPrecision(4, 2);
+            entity.Property(r => r.RecordType).HasMaxLength(50).IsRequired();
+            entity.Property(r => r.Status).HasMaxLength(30).IsRequired().HasDefaultValue("OFFICIAL");
+            entity.Property(r => r.Reason).HasMaxLength(500);
+
+            entity.HasOne(r => r.Volunteer)
+                .WithMany(v => v.CreditRecords)
+                .HasForeignKey(r => r.VolunteerId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(r => r.Activity)
+                .WithMany()
+                .HasForeignKey(r => r.ActivityId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(r => r.ActivityRegistration)
+                .WithMany()
+                .HasForeignKey(r => r.ActivityRegistrationId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(r => r.Awarder)
+                .WithMany()
+                .HasForeignKey(r => r.AwardedBy)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(r => r.VolunteerId).HasDatabaseName("idx_credit_records_volunteer_id");
+            entity.HasIndex(r => new { r.ActivityRegistrationId, r.Status })
+                .HasDatabaseName("idx_credit_records_registration_status");
         });
     }
 }

@@ -12,6 +12,7 @@ import type {
   Activity,
   Campaign,
   MyActivityRegistration,
+  VolunteerCreditSummary,
   VolunteerProfile,
 } from "@/types/volunteer.types";
 import { ActivityPostCard } from "@/components/feed/ActivityPostCard";
@@ -38,6 +39,8 @@ export default function Home() {
     MyActivityRegistration[]
   >([]);
   const [profile, setProfile] = useState<VolunteerProfile | null>(null);
+  const [creditSummary, setCreditSummary] =
+    useState<VolunteerCreditSummary | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -78,13 +81,15 @@ export default function Home() {
     if (!isAuthenticated || !isVolunteer) {
       setMyRegistrations([]);
       setProfile(null);
+      setCreditSummary(null);
       return;
     }
 
     try {
-      const [regRes, profRes] = await Promise.allSettled([
+      const [regRes, profRes, credRes] = await Promise.allSettled([
         activityApi.getMyRegistrations({ pageNumber: 1, pageSize: 50 }),
         volunteerApi.getMyProfile(),
+        volunteerApi.getMyCredits(),
       ]);
 
       if (regRes.status === "fulfilled") {
@@ -92,6 +97,9 @@ export default function Home() {
       }
       if (profRes.status === "fulfilled") {
         setProfile(profRes.value);
+      }
+      if (credRes.status === "fulfilled") {
+        setCreditSummary(credRes.value);
       }
     } catch {
       // Ignore profile/registration fetch errors
@@ -122,14 +130,15 @@ export default function Home() {
     const completed = approved.filter((r) =>
       isCompletedBothAttendanceSessions(r.attendances),
     );
-    const totalDays = completed.reduce((sum, r) => sum + (r.creditDay || 0), 0);
+    const fallbackDays = completed.reduce((sum, r) => sum + (r.creditDay || 0), 0);
+    const totalDays = creditSummary ? creditSummary.totalCreditDays : fallbackDays;
     return {
       totalRegistered: myRegistrations.filter(
         (r) => r.registrationStatus !== "CANCELLED",
       ).length,
       totalDays,
     };
-  }, [myRegistrations]);
+  }, [myRegistrations, creditSummary]);
 
   const hasActiveFilters = Boolean(
     selectedOrgId || selectedCampaignId || selectedStatus || searchTerm,

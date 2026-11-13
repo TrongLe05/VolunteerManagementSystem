@@ -175,6 +175,13 @@ public class ManualMarkAttendanceCommandHandlerTests
         checkOut.Should().NotBeNull();
         checkOut!.Status.Should().Be("APPROVED");
         checkOut.CreditEarned.Should().Be(1.0m);
+
+        // Kiểm tra sổ cái VolunteerCreditRecord
+        var creditRecordInDb = await context.VolunteerCreditRecords.FirstOrDefaultAsync(c => c.ActivityRegistrationId == regId);
+        creditRecordInDb.Should().NotBeNull();
+        creditRecordInDb!.CreditDays.Should().Be(1.0m);
+        creditRecordInDb.Status.Should().Be(VolunteerCreditRecord.StatusOfficial);
+        creditRecordInDb.AwardedBy.Should().Be(userId);
     }
 
     [Fact]

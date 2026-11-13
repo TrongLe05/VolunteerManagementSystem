@@ -49,7 +49,7 @@ public class ManualMarkAttendanceCommandHandler(
             .OrderByDescending(s => s.StartedAt)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (session == null)
+        if (session is null)
         {
             session = new AttendanceSession
             {
@@ -81,7 +81,7 @@ public class ManualMarkAttendanceCommandHandler(
             ? reg.Activity.CreditDays
             : 0m;
 
-        if (existingAttendance != null)
+        if (existingAttendance is not null)
         {
             existingAttendance.ApproveManually(userId, now, request.Note);
             if (isCheckOut && hasApprovedCheckIn)
@@ -104,16 +104,41 @@ public class ManualMarkAttendanceCommandHandler(
 
         // Nếu vừa đánh dấu CHECK_IN thành công và trước đó sinh viên đã có bản ghi CHECK_OUT APPROVED,
         // kích hoạt CreditEarned cho bản ghi CHECK_OUT đó để đủ điều kiện 2/2 lượt
+        Attendance? existingCheckOut = null;
         if (!isCheckOut)
         {
-            var existingCheckOut = await context.Attendances
+            existingCheckOut = await context.Attendances
                 .Include(a => a.AttendanceSession)
                 .FirstOrDefaultAsync(a => a.ActivityRegistrationId == reg.Id
                                        && a.AttendanceSession.Type == "CHECK_OUT"
                                        && a.Status == "APPROVED", cancellationToken);
-            if (existingCheckOut != null)
+            if (existingCheckOut is not null)
             {
                 existingCheckOut.CreditEarned = reg.Activity.CreditDays;
+            }
+        }
+
+        // Tự động ghi vào Sổ cái ngày công (VolunteerCreditRecord) khi hoàn thành đủ 2/2 lượt
+        var isBothSessionsCompleted = (isCheckOut && hasApprovedCheckIn) || (!isCheckOut && existingCheckOut is not null);
+        if (isBothSessionsCompleted && reg.Activity.CreditDays > 0m)
+        {
+            var alreadyCredited = await context.VolunteerCreditRecords
+                .AnyAsync(c => c.ActivityRegistrationId == reg.Id
+                            && c.Status == VolunteerCreditRecord.StatusOfficial, cancellationToken);
+
+            if (!alreadyCredited)
+            {
+                var creditRecord = VolunteerCreditRecord.CreateForActivityCompletion(
+                    volunteerId: reg.VolunteerId,
+                    activityId: reg.ActivityId,
+                    registrationId: reg.Id,
+                    creditDays: reg.Activity.CreditDays,
+                    awardedAt: now,
+                    activityName: reg.Activity.Name
+                );
+                creditRecord.AwardedBy = userId;
+                creditRecord.Reason = $"Cán bộ xác nhận điểm danh thủ công hoàn tất 2/2 lượt cho hoạt động: {reg.Activity.Name}.";
+                context.VolunteerCreditRecords.Add(creditRecord);
             }
         }
 

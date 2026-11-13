@@ -25,6 +25,7 @@ public class Volunteer : BaseEntity, IAuditableEntity
     public User? User { get; set; }
     public Organization Organization { get; set; } = null!;
     public ICollection<ActivityRegistration> Registrations { get; set; } = [];
+    public ICollection<VolunteerCreditRecord> CreditRecords { get; set; } = [];
 
     /// <summary>
     /// Quy tắc nghiệp vụ Nghị định 13/2023/NĐ-CP: Cấp hoặc rút lại sự đồng ý xử lý dữ liệu sinh trắc học khuôn mặt.

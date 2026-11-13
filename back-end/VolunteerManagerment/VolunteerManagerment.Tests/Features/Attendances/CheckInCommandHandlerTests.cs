@@ -202,6 +202,13 @@ public class CheckInCommandHandlerTests
         checkOutRecord.Should().NotBeNull();
         checkOutRecord!.Status.Should().Be("APPROVED");
         checkOutRecord.CreditEarned.Should().Be(1.0m); // Đã đủ 2/2 lượt nên đạt đủ 1.0 ngày công
+
+        // Kiểm tra Sổ cái VolunteerCreditRecord đã được tự động ghi nhận
+        var creditRecordInDb = await context.VolunteerCreditRecords.FirstOrDefaultAsync(c => c.ActivityRegistrationId == registration.Id);
+        creditRecordInDb.Should().NotBeNull();
+        creditRecordInDb!.CreditDays.Should().Be(1.0m);
+        creditRecordInDb.Status.Should().Be(VolunteerCreditRecord.StatusOfficial);
+        creditRecordInDb.RecordType.Should().Be(VolunteerCreditRecord.RecordTypeActivityCompletion);
     }
 
     [Fact]

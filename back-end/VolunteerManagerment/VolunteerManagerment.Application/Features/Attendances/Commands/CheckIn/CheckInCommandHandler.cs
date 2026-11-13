@@ -108,6 +108,28 @@ public class CheckInCommandHandler(
         );
 
         context.Attendances.Add(attendance);
+
+        // 9. Tự động ghi vào Sổ cái ngày công (VolunteerCreditRecord) khi hoàn tất đủ 2/2 lượt
+        if (isCheckOut && isInside && hasApprovedCheckIn && registration.Activity.CreditDays > 0m)
+        {
+            var alreadyCredited = await context.VolunteerCreditRecords
+                .AnyAsync(c => c.ActivityRegistrationId == registration.Id
+                            && c.Status == VolunteerCreditRecord.StatusOfficial, cancellationToken);
+
+            if (!alreadyCredited)
+            {
+                var creditRecord = VolunteerCreditRecord.CreateForActivityCompletion(
+                    volunteerId: volunteer.Id,
+                    activityId: registration.ActivityId,
+                    registrationId: registration.Id,
+                    creditDays: registration.Activity.CreditDays,
+                    awardedAt: now,
+                    activityName: registration.Activity.Name
+                );
+                context.VolunteerCreditRecords.Add(creditRecord);
+            }
+        }
+
         await context.SaveChangesAsync(cancellationToken);
 
         var msg = isInside

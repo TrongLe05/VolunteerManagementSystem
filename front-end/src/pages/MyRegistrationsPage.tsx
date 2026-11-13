@@ -17,8 +17,13 @@ import {
 
 import { activityApi } from "@/api/activityApi";
 import { attendanceApi } from "@/api/attendanceApi";
+import { volunteerApi } from "@/api/volunteerApi";
 import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
-import type { Activity, MyActivityRegistration } from "@/types/volunteer.types";
+import type {
+  Activity,
+  MyActivityRegistration,
+  VolunteerCreditSummary,
+} from "@/types/volunteer.types";
 import type { ActiveAttendanceSession } from "@/types/attendance.types";
 import {
   formatDateTimeVN,
@@ -47,6 +52,8 @@ export function MyRegistrationsPage() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [creditSummary, setCreditSummary] =
+    useState<VolunteerCreditSummary | null>(null);
   const [cancellingActivity, setCancellingActivity] =
     useState<MyActivityRegistration | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -64,12 +71,24 @@ export function MyRegistrationsPage() {
   const fetchMyRegistrations = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await activityApi.getMyRegistrations({
-        status: statusFilter || undefined,
-        pageNumber: 1,
-        pageSize: 50,
-      });
-      setRegistrations(res.items || []);
+      const [res, credits] = await Promise.allSettled([
+        activityApi.getMyRegistrations({
+          status: statusFilter || undefined,
+          pageNumber: 1,
+          pageSize: 50,
+        }),
+        volunteerApi.getMyCredits(),
+      ]);
+
+      if (res.status === "fulfilled") {
+        setRegistrations(res.value.items || []);
+      } else {
+        setRegistrations([]);
+      }
+
+      if (credits.status === "fulfilled") {
+        setCreditSummary(credits.value);
+      }
     } catch {
       setRegistrations([]);
     } finally {
@@ -99,10 +118,12 @@ export function MyRegistrationsPage() {
     const completedRegistrations = approved.filter((r) =>
       isCompletedBothAttendanceSessions(r.attendances),
     );
-    const totalDays = completedRegistrations.reduce(
+    const computedDays = completedRegistrations.reduce(
       (sum, r) => sum + (r.creditDay || 0),
       0,
     );
+    // Ưu tiên lấy từ Sổ cái chính thức (VolunteerCreditRecord), nếu chưa có thì dùng computedDays
+    const totalDays = creditSummary ? creditSummary.totalCreditDays : computedDays;
     const expectedDays = approved.reduce(
       (sum, r) => sum + (r.creditDay || 0),
       0,
@@ -116,7 +137,7 @@ export function MyRegistrationsPage() {
       totalDays,
       expectedDays,
     };
-  }, [registrations]);
+  }, [registrations, creditSummary]);
 
   const handleOpenCheckIn = async (activityId: string) => {
     try {
