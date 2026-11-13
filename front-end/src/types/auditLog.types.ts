@@ -1,7 +1,10 @@
+export type AuditActorType = "USER" | "SYSTEM" | "ANONYMOUS";
+
 export interface AuditLogItem {
   id: string;
   userId: string | null;
   userEmail: string | null;
+  actorType?: AuditActorType | string;
   action: string;
   entityType: string;
   entityId: string | null;
@@ -14,6 +17,7 @@ export interface AuditLogItem {
 export interface GetAuditLogsParams {
   entityType?: string;
   action?: string;
+  actorType?: string;
   userId?: string;
   entityId?: string;
   search?: string;

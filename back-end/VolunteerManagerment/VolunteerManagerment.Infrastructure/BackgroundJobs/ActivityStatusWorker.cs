@@ -40,33 +40,60 @@ public class ActivityStatusWorker(
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         // 1. Tự động chuyển OPEN / UPCOMING / PUBLISHED -> ONGOING khi đã đến giờ bắt đầu (StartTime <= now < EndTime)
-        var startedCount = await dbContext.Activities
+        var activitiesToStart = await dbContext.Activities
             .Where(a => (a.Status == "OPEN" || a.Status == "UPCOMING" || a.Status == "PUBLISHED") && a.StartTime <= now && a.EndTime > now)
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(a => a.Status, "ONGOING")
-                .SetProperty(a => a.UpdatedAt, now), cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        foreach (var activity in activitiesToStart)
+        {
+            activity.Status = "ONGOING";
+            activity.UpdatedAt = now;
+        }
 
         // 2. Tự động chuyển OPEN / ONGOING / UPCOMING / PUBLISHED -> COMPLETED khi đã qua thời gian kết thúc (EndTime <= now)
-        var endedCount = await dbContext.Activities
+        var activitiesToEnd = await dbContext.Activities
             .Where(a => (a.Status == "OPEN" || a.Status == "ONGOING" || a.Status == "UPCOMING" || a.Status == "PUBLISHED") && a.EndTime <= now)
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(a => a.Status, "COMPLETED")
-                .SetProperty(a => a.UpdatedAt, now), cancellationToken);
+            .ToListAsync(cancellationToken);
 
-        // 3. (Tùy chọn) Tự động cập nhật Chiến dịch (Campaign)
-        // UPCOMING -> ONGOING khi StartDate <= today
-        var campStarted = await dbContext.Campaigns
+        foreach (var activity in activitiesToEnd)
+        {
+            activity.Status = "COMPLETED";
+            activity.UpdatedAt = now;
+        }
+
+        // 3. Tự động cập nhật Chiến dịch (Campaign)
+        // UPCOMING / DRAFT -> ONGOING khi StartDate <= today <= EndDate
+        var campaignsToStart = await dbContext.Campaigns
             .Where(c => (c.Status == "UPCOMING" || c.Status == "DRAFT") && c.StartDate <= today && c.EndDate >= today)
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(c => c.Status, "ONGOING")
-                .SetProperty(c => c.UpdatedAt, now), cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        foreach (var campaign in campaignsToStart)
+        {
+            campaign.Status = "ONGOING";
+            campaign.UpdatedAt = now;
+        }
 
         // ONGOING -> COMPLETED khi EndDate < today
-        var campEnded = await dbContext.Campaigns
+        var campaignsToEnd = await dbContext.Campaigns
             .Where(c => c.Status == "ONGOING" && c.EndDate < today)
-            .ExecuteUpdateAsync(s => s
-                .SetProperty(c => c.Status, "COMPLETED")
-                .SetProperty(c => c.UpdatedAt, now), cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        foreach (var campaign in campaignsToEnd)
+        {
+            campaign.Status = "COMPLETED";
+            campaign.UpdatedAt = now;
+        }
+
+        var startedCount = activitiesToStart.Count;
+        var endedCount = activitiesToEnd.Count;
+        var campStarted = campaignsToStart.Count;
+        var campEnded = campaignsToEnd.Count;
+
+        if (startedCount > 0 || endedCount > 0 || campStarted > 0 || campEnded > 0)
+        {
+            // Lưu qua SaveChangesAsync để AuditSaveChangesInterceptor ghi nhận nhật ký với định danh "Hệ thống" (UserId = null, IpAddress = null)
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
 
         var notificationService = scope.ServiceProvider.GetService<IDashboardNotificationService>();
 

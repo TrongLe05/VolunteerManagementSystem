@@ -4,6 +4,7 @@ public record AuditLogDto(
     Guid Id,
     Guid? UserId,
     string? UserEmail,
+    string ActorType,
     string Action,
     string EntityType,
     Guid? EntityId,

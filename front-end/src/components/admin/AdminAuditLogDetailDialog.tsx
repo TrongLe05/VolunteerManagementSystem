@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  Bot,
   Calendar,
   Check,
   Copy,
@@ -8,6 +9,7 @@ import {
   Layers,
   Table as TableIcon,
   User,
+  UserX,
 } from "lucide-react";
 
 import type { AuditLogItem } from "@/types/auditLog.types";
@@ -63,6 +65,15 @@ export function AdminAuditLogDetailDialog({
     return Array.from(keys);
   }, [oldParsed, newParsed]);
 
+  const resolvedActorType = log
+    ? log.actorType ||
+      (log.userId || log.userEmail
+        ? "USER"
+        : log.ipAddress
+          ? "ANONYMOUS"
+          : "SYSTEM")
+    : "SYSTEM";
+
   const handleCopyJson = () => {
     if (!log) return;
     const payload = {
@@ -70,6 +81,7 @@ export function AdminAuditLogDetailDialog({
       action: log.action,
       entityType: log.entityType,
       entityId: log.entityId,
+      actorType: resolvedActorType,
       userEmail: log.userEmail,
       ipAddress: log.ipAddress,
       createdAt: log.createdAt,
@@ -106,6 +118,12 @@ export function AdminAuditLogDetailDialog({
         return (
           <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/20 font-semibold">
             XOÁ (DELETE)
+          </Badge>
+        );
+      case "LOGIN":
+        return (
+          <Badge className="bg-violet-500/10 text-violet-600 border-violet-500/20 font-semibold">
+            ĐĂNG NHẬP (LOGIN)
           </Badge>
         );
       default:
@@ -189,12 +207,30 @@ export function AdminAuditLogDetailDialog({
             <span className="text-slate-400 flex items-center gap-1 font-medium">
               <User className="size-3.5" /> Người thực hiện
             </span>
-            <span
-              className="font-semibold text-slate-800 truncate"
-              title={log.userEmail || "Hệ thống / Vô danh"}
-            >
-              {log.userEmail || "Hệ thống"}
-            </span>
+            {resolvedActorType === "USER" && log.userEmail ? (
+              <span
+                className="font-semibold text-slate-800 truncate"
+                title={log.userEmail}
+              >
+                {log.userEmail}
+              </span>
+            ) : resolvedActorType === "ANONYMOUS" ? (
+              <span
+                className="inline-flex items-center gap-1 font-semibold text-amber-700"
+                title="Yêu cầu HTTP chưa đăng nhập (Anonymous)"
+              >
+                <UserX className="size-3.5 text-amber-600" />
+                Anonymous
+              </span>
+            ) : (
+              <span
+                className="inline-flex items-center gap-1 font-semibold text-indigo-700"
+                title="Tác vụ tự động của hệ thống (Background Worker / System)"
+              >
+                <Bot className="size-3.5 text-indigo-600" />
+                Hệ thống
+              </span>
+            )}
           </div>
 
           <div className="flex flex-col gap-1">

@@ -30,6 +30,18 @@ public class GetAuditLogsQueryHandler(IApplicationDbContext context)
             query = query.Where(a => a.Action.ToUpper() == action);
         }
 
+        if (!string.IsNullOrWhiteSpace(request.ActorType))
+        {
+            var actorType = request.ActorType.Trim().ToUpperInvariant();
+            query = actorType switch
+            {
+                "USER" => query.Where(a => a.UserId != null),
+                "SYSTEM" => query.Where(a => a.UserId == null && a.IpAddress == null),
+                "ANONYMOUS" => query.Where(a => a.UserId == null && a.IpAddress != null),
+                _ => query
+            };
+        }
+
         if (request.UserId.HasValue)
         {
             query = query.Where(a => a.UserId == request.UserId.Value);
@@ -43,9 +55,14 @@ public class GetAuditLogsQueryHandler(IApplicationDbContext context)
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             var search = request.Search.Trim().ToLower();
+            var isSystemKeyword = "hệ thống".Contains(search) || "he thong".Contains(search) || "system".Contains(search);
+            var isAnonymousKeyword = "anonymous".Contains(search) || "khách".Contains(search) || "vô danh".Contains(search);
+
             query = query.Where(a =>
                 (a.User != null && a.User.Email.ToLower().Contains(search)) ||
                 (a.User != null && a.User.Username.ToLower().Contains(search)) ||
+                (isSystemKeyword && a.UserId == null && a.IpAddress == null) ||
+                (isAnonymousKeyword && a.UserId == null && a.IpAddress != null) ||
                 a.EntityType.ToLower().Contains(search) ||
                 (a.OldValues != null && a.OldValues.ToLower().Contains(search)) ||
                 (a.NewValues != null && a.NewValues.ToLower().Contains(search)));
@@ -74,6 +91,9 @@ public class GetAuditLogsQueryHandler(IApplicationDbContext context)
                 a.Id,
                 a.UserId,
                 a.User != null ? a.User.Email : null,
+                a.UserId != null
+                    ? "USER"
+                    : (a.IpAddress != null ? "ANONYMOUS" : "SYSTEM"),
                 a.Action,
                 a.EntityType,
                 a.EntityId,

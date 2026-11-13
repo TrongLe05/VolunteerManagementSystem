@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Bot,
   Eye,
   FileClock,
   Globe,
@@ -7,6 +8,7 @@ import {
   RefreshCw,
   Search,
   User,
+  UserX,
   X,
 } from "lucide-react";
 
@@ -46,6 +48,7 @@ const ENTITY_OPTIONS = [
   { value: "Volunteer", label: "Tình nguyện viên (Volunteer)" },
   { value: "Attendance", label: "Điểm danh (Attendance)" },
   { value: "ActivityRegistration", label: "Đăng ký (Registration)" },
+  { value: "VolunteerCreditRecord", label: "Sổ cái ngày công (Credit)" },
 ];
 
 const ACTION_OPTIONS = [
@@ -53,6 +56,14 @@ const ACTION_OPTIONS = [
   { value: "CREATE", label: "Tạo mới (CREATE)" },
   { value: "UPDATE", label: "Cập nhật (UPDATE)" },
   { value: "DELETE", label: "Xoá (DELETE)" },
+  { value: "LOGIN", label: "Đăng nhập (LOGIN)" },
+];
+
+const ACTOR_OPTIONS = [
+  { value: "ALL", label: "Tất cả định danh" },
+  { value: "USER", label: "Người dùng (User)" },
+  { value: "SYSTEM", label: "Hệ thống (System)" },
+  { value: "ANONYMOUS", label: "Khách (Anonymous)" },
 ];
 
 export function AdminAuditLogsTab() {
@@ -63,6 +74,7 @@ export function AdminAuditLogsTab() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEntity, setSelectedEntity] = useState("ALL");
   const [selectedAction, setSelectedAction] = useState("ALL");
+  const [selectedActor, setSelectedActor] = useState("ALL");
   const [fromDate, setFromDate] = useState<Date | undefined>();
   const [toDate, setToDate] = useState<Date | undefined>();
 
@@ -83,6 +95,7 @@ export function AdminAuditLogsTab() {
         search: searchTerm.trim() || undefined,
         entityType: selectedEntity !== "ALL" ? selectedEntity : undefined,
         action: selectedAction !== "ALL" ? selectedAction : undefined,
+        actorType: selectedActor !== "ALL" ? selectedActor : undefined,
         fromDate: fromDate ? new Date(fromDate).toISOString() : undefined,
         toDate: toDate ? new Date(toDate).toISOString() : undefined,
         pageNumber: page,
@@ -103,6 +116,7 @@ export function AdminAuditLogsTab() {
     searchTerm,
     selectedEntity,
     selectedAction,
+    selectedActor,
     fromDate,
     toDate,
     page,
@@ -117,6 +131,7 @@ export function AdminAuditLogsTab() {
     setSearchTerm("");
     setSelectedEntity("ALL");
     setSelectedAction("ALL");
+    setSelectedActor("ALL");
     setFromDate(undefined);
     setToDate(undefined);
     setPage(1);
@@ -142,6 +157,12 @@ export function AdminAuditLogsTab() {
             XOÁ
           </Badge>
         );
+      case "LOGIN":
+        return (
+          <Badge className="bg-violet-500/10 text-violet-600 hover:bg-violet-500/20 border-violet-500/20 font-semibold">
+            ĐĂNG NHẬP
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{action}</Badge>;
     }
@@ -156,15 +177,69 @@ export function AdminAuditLogsTab() {
     );
   };
 
+  const renderActorIdentity = (item: AuditLogItem) => {
+    const resolvedType =
+      item.actorType ||
+      (item.userId || item.userEmail
+        ? "USER"
+        : item.ipAddress
+          ? "ANONYMOUS"
+          : "SYSTEM");
+
+    if (resolvedType === "USER" && (item.userEmail || item.userId)) {
+      return (
+        <div className="flex items-center gap-1.5 font-medium text-slate-800">
+          <User className="size-3.5 text-blue-600 shrink-0" />
+          <span
+            className="truncate max-w-[170px]"
+            title={item.userEmail || item.userId || "Người dùng"}
+          >
+            {item.userEmail || item.userId}
+          </span>
+        </div>
+      );
+    }
+
+    if (resolvedType === "ANONYMOUS") {
+      return (
+        <span
+          className="inline-flex items-center gap-1.5 rounded-md bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200/80"
+          title="Thao tác từ khách hoặc người dùng chưa xác thực qua HTTP Request"
+        >
+          <UserX className="size-3.5 text-amber-600 shrink-0" />
+          Anonymous
+        </span>
+      );
+    }
+
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 border border-indigo-200/80"
+        title="Tác vụ tự động của hệ thống (Background Worker / Hệ thống)"
+      >
+        <Bot className="size-3.5 text-indigo-600 shrink-0" />
+        Hệ thống
+      </span>
+    );
+  };
+
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (searchTerm.trim()) count++;
     if (selectedEntity !== "ALL") count++;
     if (selectedAction !== "ALL") count++;
+    if (selectedActor !== "ALL") count++;
     if (fromDate) count++;
     if (toDate) count++;
     return count;
-  }, [searchTerm, selectedEntity, selectedAction, fromDate, toDate]);
+  }, [
+    searchTerm,
+    selectedEntity,
+    selectedAction,
+    selectedActor,
+    fromDate,
+    toDate,
+  ]);
 
   return (
     <div className="space-y-4">
@@ -212,7 +287,7 @@ export function AdminAuditLogsTab() {
         <CardContent className="p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
             {/* Search */}
-            <div className="relative sm:col-span-2 lg:col-span-4">
+            <div className="relative sm:col-span-2 lg:col-span-3">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
               <Input
                 placeholder="Tìm email, user, ID thực thể, thay đổi..."
@@ -277,8 +352,34 @@ export function AdminAuditLogsTab() {
               </Select>
             </div>
 
+            {/* Actor Type Filter */}
+            <div className="sm:col-span-1 lg:col-span-2">
+              <Select
+                value={selectedActor}
+                onValueChange={(val) => {
+                  setSelectedActor(val);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue placeholder="Chọn định danh" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ACTOR_OPTIONS.map((opt) => (
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      className="text-xs"
+                    >
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Date range trigger / clear */}
-            <div className="sm:col-span-2 lg:col-span-4 flex items-center gap-2">
+            <div className="sm:col-span-1 lg:col-span-3 flex items-center gap-2">
               <div className="flex-1 min-w-0">
                 <DatePicker
                   value={fromDate}
@@ -407,15 +508,7 @@ export function AdminAuditLogsTab() {
 
                       {/* Người thực hiện */}
                       <TableCell className="text-xs">
-                        <div className="flex items-center gap-1.5 font-medium text-slate-800">
-                          <User className="size-3.5 text-slate-400 shrink-0" />
-                          <span
-                            className="truncate max-w-[170px]"
-                            title={item.userEmail || "Hệ thống"}
-                          >
-                            {item.userEmail || "Hệ thống / Anonymous"}
-                          </span>
-                        </div>
+                        {renderActorIdentity(item)}
                       </TableCell>
 
                       {/* Hành động */}

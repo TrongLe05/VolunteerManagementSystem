@@ -109,6 +109,7 @@ public class AuditSaveChangesInterceptor(
                     foreach (var prop in entry.Properties)
                     {
                         if (prop.Metadata.IsPrimaryKey() && prop.CurrentValue == null) continue;
+                        if (prop.Metadata.Name == nameof(User.PasswordHash)) continue;
                         newValues[prop.Metadata.Name] = prop.CurrentValue;
                     }
                     break;
@@ -117,6 +118,7 @@ public class AuditSaveChangesInterceptor(
                     action = "DELETE";
                     foreach (var prop in entry.Properties)
                     {
+                        if (prop.Metadata.Name == nameof(User.PasswordHash)) continue;
                         oldValues[prop.Metadata.Name] = prop.OriginalValue;
                     }
                     break;
@@ -132,9 +134,18 @@ public class AuditSaveChangesInterceptor(
 
                             if (!Equals(original, current))
                             {
-                                oldValues[prop.Metadata.Name] = original;
-                                newValues[prop.Metadata.Name] = current;
                                 changedColumns.Add(prop.Metadata.Name);
+                                if (prop.Metadata.Name == nameof(User.PasswordHash))
+                                {
+                                    oldValues[prop.Metadata.Name] = "***REDACTED***";
+                                    newValues[prop.Metadata.Name] = "***CHANGED***";
+                                }
+                                else
+                                {
+
+                                    oldValues[prop.Metadata.Name] = original;
+                                    newValues[prop.Metadata.Name] = current;
+                                }
                             }
                         }
                     }
@@ -150,10 +161,41 @@ public class AuditSaveChangesInterceptor(
                     continue;
             }
 
+            var effectiveUserId = userId;
+            var effectiveUserEmail = userEmail;
+
+            if (entry.Entity is User userEntity)
+            {
+                var meaningfulChanges = changedColumns
+                    .Where(c => c != nameof(IAuditableEntity.UpdatedAt))
+                    .ToList();
+
+                if (entry.State is EntityState.Modified &&
+                    meaningfulChanges.Count == 1 &&
+                    meaningfulChanges[0] == nameof(User.LastLoginAt))
+                {
+                    action = "LOGIN";
+                }
+
+                if (!effectiveUserId.HasValue && userEntity.Id != Guid.Empty)
+                {
+                    effectiveUserId = userEntity.Id;
+                    effectiveUserEmail = userEntity.Email;
+                }
+            }
+            else if (!effectiveUserId.HasValue && entry.Entity is Volunteer volunteerEntity && volunteerEntity.UserId != Guid.Empty)
+            {
+                effectiveUserId = volunteerEntity.UserId;
+            }
+            else if (!effectiveUserId.HasValue && entry.Entity is UserRole userRoleEntity && userRoleEntity.UserId != Guid.Empty)
+            {
+                effectiveUserId = userRoleEntity.UserId;
+            }
+
             var auditLog = new AuditLog
             {
                 Id = Guid.NewGuid(),
-                UserId = userId,
+                UserId = effectiveUserId,
                 Action = action,
                 EntityType = entityName,
                 EntityId = entityGuid,
@@ -165,14 +207,17 @@ public class AuditSaveChangesInterceptor(
 
             auditEntries.Add(auditLog);
 
+            var actorDisplay = auditLog.UserId.HasValue
+                ? $"{auditLog.UserId} ({effectiveUserEmail ?? "N/A"})"
+                : (parsedIp != null ? "Anonymous" : "Hệ thống (System)");
+
             // Ghi structured log Serilog
             logger.LogInformation(
-                "[AUDIT] {Action} on {EntityType} (Id: {EntityId}) by User: {UserId} ({UserEmail}) from IP: {IpAddress} | Changed: {ChangedColumns}",
+                "[AUDIT] {Action} on {EntityType} (Id: {EntityId}) by Actor: {Actor} from IP: {IpAddress} | Changed: {ChangedColumns}",
                 auditLog.Action,
                 auditLog.EntityType,
                 auditLog.EntityId?.ToString() ?? "N/A",
-                auditLog.UserId?.ToString() ?? "Anonymous",
-                userEmail ?? "N/A",
+                actorDisplay,
                 parsedIp?.ToString() ?? "N/A",
                 changedColumns.Count > 0 ? string.Join(", ", changedColumns) : "All");
         }

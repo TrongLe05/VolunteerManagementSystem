@@ -7,6 +7,7 @@ namespace VolunteerManagerment.Application.Features.AuditLogs.Queries.GetAuditLo
 public record GetAuditLogsQuery(
     string? EntityType = null,
     string? Action = null,
+    string? ActorType = null,
     Guid? UserId = null,
     Guid? EntityId = null,
     string? Search = null,
