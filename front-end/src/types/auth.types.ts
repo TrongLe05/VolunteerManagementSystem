@@ -51,3 +51,15 @@ export interface Organization {
   description: string | null;
   isActive: boolean;
 }
+
+export interface GoogleLoginRequest {
+  idToken: string;
+  organizationId?: string | null;
+}
+
+export interface GoogleLoginResponse {
+  requiresOrganization: boolean;
+  email?: string | null;
+  fullName?: string | null;
+  loginData?: LoginResponse | null;
+}

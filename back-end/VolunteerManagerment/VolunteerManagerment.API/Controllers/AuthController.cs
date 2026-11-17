@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VolunteerManagerment.Application.Features.Auth.Commands.ChangePassword;
 using VolunteerManagerment.Application.Features.Auth.Commands.ForgotPassword;
+using VolunteerManagerment.Application.Features.Auth.Commands.GoogleLogin;
 using VolunteerManagerment.Application.Features.Auth.Commands.Login;
 using VolunteerManagerment.Application.Features.Auth.Commands.Logout;
 using VolunteerManagerment.Application.Features.Auth.Commands.RefreshTokens;
@@ -33,7 +34,7 @@ public class AuthController(ISender sender) : ControllerBase
     }
 
     [HttpPost("logout")]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<IActionResult> Logout([FromBody] LogoutCommand command, CancellationToken cancellationToken)
     {
         await sender.Send(command, cancellationToken);
@@ -99,5 +100,11 @@ public class AuthController(ISender sender) : ControllerBase
         var result = await sender.Send(command, cancellationToken);
         return Ok(result);
     }
-
+    [HttpPost("google")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginCommand command, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(command, cancellationToken);
+        return Ok(result);
+    }
 }

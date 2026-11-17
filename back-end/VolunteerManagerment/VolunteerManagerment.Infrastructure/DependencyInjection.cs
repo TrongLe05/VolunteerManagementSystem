@@ -56,6 +56,8 @@ public static class DependencyInjection
 
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
+        services.AddScoped<IGoogleAuthService, GoogleAuthService>();
+
         services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 
         services.AddHostedService<ActivityStatusWorker>();

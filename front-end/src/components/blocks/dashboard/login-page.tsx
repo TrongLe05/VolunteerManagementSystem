@@ -35,6 +35,7 @@ export interface LoginPageProps {
   error?: string;
   ssoLabel?: string;
   ssoIcon?: React.ReactNode;
+  ssoSlot?: React.ReactNode;
   supportText?: string;
   supportLinkLabel?: string;
   onSubmit?: (v: {
@@ -73,6 +74,7 @@ export function LoginPage({
   error,
   ssoLabel = "Đăng nhập bằng SSO",
   ssoIcon,
+  ssoSlot,
   supportText = "Không đăng nhập được?",
   supportLinkLabel = "Gửi yêu cầu hỗ trợ",
   onSubmit,
@@ -296,14 +298,19 @@ export function LoginPage({
             <div className="my-0.5 flex items-center gap-3 text-small text-muted-foreground before:h-px before:flex-1 before:bg-[#e4ebf2] before:content-[''] after:h-px after:flex-1 after:bg-[#e4ebf2] after:content-[''] dark:before:bg-border dark:after:bg-border">
               hoặc
             </div>
-            <button
-              type="button"
-              onClick={onSso}
-              className="flex h-[47px] w-full cursor-pointer items-center justify-center gap-2.5 rounded-[9px] border border-[#d1dbe6] bg-transparent text-lead font-semibold text-foreground transition-colors duration-[130ms] hover:border-primary hover:text-primary dark:border-border [&_svg]:size-[21px]"
-            >
-              {ssoIcon}
-              {ssoLabel}
-            </button>
+            {ssoSlot ? (
+              <div className="flex w-full justify-center">{ssoSlot}</div>
+            ) : (
+              <button
+                type="button"
+                onClick={onSso}
+                className="flex h-[47px] w-full cursor-pointer items-center justify-center gap-2.5 rounded-[9px] border border-[#d1dbe6] bg-transparent text-lead font-semibold text-foreground
+        transition-colors duration-[130ms] hover:border-primary hover:text-primary dark:border-border [&_svg]:size-[21px]"
+              >
+                {ssoIcon}
+                {ssoLabel}
+              </button>
+            )}
             <p className="m-0 mt-3.5 text-center text-body text-muted-foreground dark:text-muted-foreground">
               {supportText}{" "}
               <button

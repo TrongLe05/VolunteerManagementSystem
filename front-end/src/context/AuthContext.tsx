@@ -7,6 +7,8 @@ import {
 } from "react";
 import { authApi } from "@/api/authApi";
 import type {
+  GoogleLoginRequest,
+  GoogleLoginResponse,
   LoginRequest,
   RegisterRequest,
   RoleType,
@@ -19,6 +21,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (data: LoginRequest) => Promise<void>;
+  loginWithGoogle: (data: GoogleLoginRequest) => Promise<GoogleLoginResponse>;
   logout: () => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
@@ -72,6 +75,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("accessToken", response.accessToken);
     localStorage.setItem("refreshToken", response.refreshToken);
     setUser(response.user);
+  };
+
+  // Hàm đăng nhập bằng Google: gọi API -> lưu Token vào localStorage -> lưu User vào State
+  const loginWithGoogle = async (data: GoogleLoginRequest) => {
+    const response = await authApi.google(data);
+    if (!response.requiresOrganization && response.loginData) {
+      localStorage.setItem("accessToken", response.loginData.accessToken);
+      localStorage.setItem("refreshToken", response.loginData.refreshToken);
+      setUser(response.loginData.user);
+    }
+    return response;
   };
 
   // Hàm Đăng xuất: gọi API thu hồi RefreshToken -> xóa localStorage -> xóa State
@@ -131,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         login,
+        loginWithGoogle,
         logout,
         register,
         forgotPassword,
