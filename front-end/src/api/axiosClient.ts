@@ -24,6 +24,8 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+let refreshTokenPromise: Promise<RefreshTokenResponse> | null = null;
+
 axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -31,6 +33,8 @@ axiosClient.interceptors.response.use(
 
     const isAuthEndpoint =
       originalRequest?.url?.includes("/auth/login") ||
+      originalRequest?.url?.includes("/auth/google") ||
+      originalRequest?.url?.includes("/auth/logout") ||
       originalRequest?.url?.includes("/auth/register") ||
       originalRequest?.url?.includes("/auth/refresh-token");
 
@@ -46,20 +50,26 @@ axiosClient.interceptors.response.use(
 
       if (expiredAccessToken && refreshToken) {
         try {
-          const response = await axios.post<RefreshTokenResponse>(
-            `${API_BASE_URL}/auth/refresh-token`,
-            {
-              expiredAccessToken,
-              refreshToken,
-            },
-          );
+          if (!refreshTokenPromise) {
+            refreshTokenPromise = axios
+              .post<RefreshTokenResponse>(
+                `${API_BASE_URL}/auth/refresh-token`,
+                {
+                  expiredAccessToken,
+                  refreshToken,
+                },
+              )
+              .then((res) => {
+                localStorage.setItem("accessToken", res.data.accessToken);
+                localStorage.setItem("refreshToken", res.data.refreshToken);
+                return res.data;
+              })
+              .finally(() => {
+                refreshTokenPromise = null;
+              });
+          }
 
-          const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-            response.data;
-
-          // Cất cặp Token mới vào localStorage
-          localStorage.setItem("accessToken", newAccessToken);
-          localStorage.setItem("refreshToken", newRefreshToken);
+          const { accessToken: newAccessToken } = await refreshTokenPromise;
 
           // Gắn token mới vào lại request vừa bị lỗi 401/403 và thực hiện lại nó!
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;

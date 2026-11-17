@@ -171,7 +171,10 @@ try
         options.WithTitle("Hệ thống Quản lý Tình nguyện viên DThU - API Docs");
     });
 
-    app.UseHttpsRedirection();
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
 
     app.UseCors("AllowFrontend");
 
