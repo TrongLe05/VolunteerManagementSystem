@@ -96,7 +96,9 @@ export function AdminActivitiesTab({
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [reviewActivity, setReviewActivity] = useState<Activity | null>(null);
-  const [deletingActivity, setDeletingActivity] = useState<Activity | null>(null);
+  const [deletingActivity, setDeletingActivity] = useState<Activity | null>(
+    null,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
@@ -198,28 +200,54 @@ export function AdminActivitiesTab({
 
   const handleStartDateChange = (d: Date | undefined) => {
     setStartDate(d);
-    if (editingActivity && selectedStatus.value !== "DRAFT" && selectedStatus.value !== "CANCELLED") {
+    if (
+      editingActivity &&
+      selectedStatus.value !== "DRAFT" &&
+      selectedStatus.value !== "CANCELLED"
+    ) {
       const now = new Date();
       if (endDate && endDate <= now) {
-        setSelectedStatus(ACTIVITY_STATUS_LIST.find((s) => s.value === "COMPLETED") || selectedStatus);
+        setSelectedStatus(
+          ACTIVITY_STATUS_LIST.find((s) => s.value === "COMPLETED") ||
+            selectedStatus,
+        );
       } else if (d && d <= now) {
-        setSelectedStatus(ACTIVITY_STATUS_LIST.find((s) => s.value === "ONGOING") || selectedStatus);
+        setSelectedStatus(
+          ACTIVITY_STATUS_LIST.find((s) => s.value === "ONGOING") ||
+            selectedStatus,
+        );
       } else if (d && d > now) {
-        setSelectedStatus(ACTIVITY_STATUS_LIST.find((s) => s.value === "OPEN") || selectedStatus);
+        setSelectedStatus(
+          ACTIVITY_STATUS_LIST.find((s) => s.value === "OPEN") ||
+            selectedStatus,
+        );
       }
     }
   };
 
   const handleEndDateChange = (d: Date | undefined) => {
     setEndDate(d);
-    if (editingActivity && selectedStatus.value !== "DRAFT" && selectedStatus.value !== "CANCELLED") {
+    if (
+      editingActivity &&
+      selectedStatus.value !== "DRAFT" &&
+      selectedStatus.value !== "CANCELLED"
+    ) {
       const now = new Date();
       if (d && d <= now) {
-        setSelectedStatus(ACTIVITY_STATUS_LIST.find((s) => s.value === "COMPLETED") || selectedStatus);
+        setSelectedStatus(
+          ACTIVITY_STATUS_LIST.find((s) => s.value === "COMPLETED") ||
+            selectedStatus,
+        );
       } else if (startDate && startDate <= now) {
-        setSelectedStatus(ACTIVITY_STATUS_LIST.find((s) => s.value === "ONGOING") || selectedStatus);
+        setSelectedStatus(
+          ACTIVITY_STATUS_LIST.find((s) => s.value === "ONGOING") ||
+            selectedStatus,
+        );
       } else if (startDate && startDate > now) {
-        setSelectedStatus(ACTIVITY_STATUS_LIST.find((s) => s.value === "OPEN") || selectedStatus);
+        setSelectedStatus(
+          ACTIVITY_STATUS_LIST.find((s) => s.value === "OPEN") ||
+            selectedStatus,
+        );
       }
     }
   };
@@ -368,6 +396,8 @@ export function AdminActivitiesTab({
                 ) : activities.length > 0 ? (
                   activities.map((act) => {
                     const statusCfg = getActivityStatusConfig(act.status);
+                    const isCompleted =
+                      act.status?.toUpperCase() === "COMPLETED";
                     return (
                       <TableRow key={act.id}>
                         <TableCell className="max-w-64">
@@ -409,11 +439,18 @@ export function AdminActivitiesTab({
                             <Button
                               size="xs"
                               variant="outline"
+                              disabled={isCompleted}
                               onClick={() =>
-                                navigate(`/admin/activities/${act.id}/attendance`)
+                                navigate(
+                                  `/admin/activities/${act.id}/attendance`,
+                                )
                               }
-                              className="gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 cursor-pointer"
-                              title="Điểm danh và danh sách tình nguyện viên"
+                              className="gap-1 text-emerald-700 border-emerald-200 hover:bg-emerald-50 cursor-pointer disabled:cursor-not-allowed"
+                              title={
+                                isCompleted
+                                  ? "Hoạt động đã hoàn thành, không thể điểm danh"
+                                  : "Điểm danh và danh sách tình nguyện viên"
+                              }
                             >
                               <ScanFace className="size-3.5" />
                               Điểm danh
@@ -421,8 +458,14 @@ export function AdminActivitiesTab({
                             <Button
                               size="xs"
                               variant="outline"
+                              disabled={isCompleted}
                               onClick={() => setReviewActivity(act)}
-                              className="gap-1 text-blue-700 border-blue-200 hover:bg-blue-50"
+                              className="gap-1 text-blue-700 border-blue-200 hover:bg-blue-50 cursor-pointer disabled:cursor-not-allowed"
+                              title={
+                                isCompleted
+                                  ? "Hoạt động đã hoàn thành, không thể duyệt đăng ký"
+                                  : "Duyệt danh sách đăng ký"
+                              }
                             >
                               <Users className="size-3.5" />
                               Duyệt ĐK
@@ -546,11 +589,17 @@ export function AdminActivitiesTab({
             <div className="grid grid-col-2 gap-3 ">
               <div className="space-y-1.5">
                 <Label>Thời gian bắt đầu hoạt động *</Label>
-                <DateTimePicker value={startDate} onChange={handleStartDateChange} />
+                <DateTimePicker
+                  value={startDate}
+                  onChange={handleStartDateChange}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Thời gian kết thúc hoạt động *</Label>
-                <DateTimePicker value={endDate} onChange={handleEndDateChange} />
+                <DateTimePicker
+                  value={endDate}
+                  onChange={handleEndDateChange}
+                />
               </div>
             </div>
 

@@ -72,7 +72,9 @@ export function AdminCampaignsTab({
   const { user } = useAuth();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
-  const [deletingCampaign, setDeletingCampaign] = useState<Campaign | null>(null);
+  const [deletingCampaign, setDeletingCampaign] = useState<Campaign | null>(
+    null,
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
@@ -376,7 +378,9 @@ export function AdminCampaignsTab({
                 <Label>Ngày bắt đầu</Label>
                 <DatePicker
                   value={startDate ? new Date(startDate) : undefined}
-                  onChange={(d) => setStartDate(d ? format(d, "yyyy-MM-dd") : "")}
+                  onChange={(d) =>
+                    setStartDate(d ? format(d, "yyyy-MM-dd") : "")
+                  }
                   placeholder="Chọn ngày bắt đầu..."
                 />
               </div>
