@@ -33,7 +33,7 @@ import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 import { toast } from "@/components/ui/toaster";
 
 interface AdminRegistrationsDialogProps {
-  activity: Activity | null;
+  activity: Pick<Activity, "id" | "name"> | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }

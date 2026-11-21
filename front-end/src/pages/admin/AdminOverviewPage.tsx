@@ -2,16 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { RefreshCw } from "lucide-react";
 
-import { activityApi } from "@/api/activityApi";
-import { campaignApi } from "@/api/campaignApi";
-import { organizationApi } from "@/api/organizationApi";
-import { volunteerApi } from "@/api/volunteerApi";
-import type { Organization } from "@/types/auth.types";
-import type { Activity, Campaign } from "@/types/volunteer.types";
-import {
-  formatDateTimeVN,
-  getActivityStatusConfig,
-} from "@/lib/activity-helpers";
+import { dashboardApi } from "@/api/dashboardApi";
+import type {
+  DashboardPendingActivity,
+  DashboardSchedule,
+  DashboardSummary,
+  DashboardTrends,
+} from "@/types/dashboard.types";
+import { formatDateTimeVN } from "@/lib/activity-helpers";
 import { useDashboardRealtime } from "@/hooks/useDashboardRealtime";
 import { AdminRegistrationsDialog } from "@/components/admin/AdminRegistrationsDialog";
 import { PageHead } from "@/components/blocks/shell/page-chrome";
@@ -21,38 +19,43 @@ import {
   DashboardPage,
   type DashboardNotification,
   type DashboardScheduleEvent,
-  type DashboardWeekDay,
   type DashboardWeekLeader,
   type StatCardProps,
 } from "@/components/blocks/dashboard";
 
 export function AdminOverviewPage() {
   const navigate = useNavigate();
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [volunteerCount, setVolunteerCount] = useState(0);
-  const [reviewActivity, setReviewActivity] = useState<Activity | null>(null);
+
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [trends, setTrends] = useState<DashboardTrends | null>(null);
+  const [pendingItems, setPendingItems] = useState<DashboardPendingActivity[]>(
+    [],
+  );
+  const [schedule, setSchedule] = useState<DashboardSchedule | null>(null);
+
+  const [reviewActivity, setReviewActivity] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const fetchOverview = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [orgRes, campRes, actRes, volRes] = await Promise.allSettled([
-        organizationApi.getAll(),
-        campaignApi.getAll({ pageNumber: 1, pageSize: 50 }),
-        activityApi.getManage({ pageNumber: 1, pageSize: 50 }),
-        volunteerApi.getAll({ pageNumber: 1, pageSize: 1 }),
-      ]);
+      const [summaryRes, trendsRes, pendingRes, scheduleRes] =
+        await Promise.allSettled([
+          dashboardApi.getSummary(),
+          dashboardApi.getTrends(6),
+          dashboardApi.getPendingApprovals(5),
+          dashboardApi.getSchedule(),
+        ]);
 
-      if (orgRes.status === "fulfilled") setOrganizations(orgRes.value || []);
-      if (campRes.status === "fulfilled")
-        setCampaigns(campRes.value.items || []);
-      if (actRes.status === "fulfilled")
-        setActivities(actRes.value.items || []);
-      if (volRes.status === "fulfilled")
-        setVolunteerCount(volRes.value.totalCount || 0);
+      if (summaryRes.status === "fulfilled") setSummary(summaryRes.value);
+      if (trendsRes.status === "fulfilled") setTrends(trendsRes.value);
+      if (pendingRes.status === "fulfilled")
+        setPendingItems(pendingRes.value || []);
+      if (scheduleRes.status === "fulfilled") setSchedule(scheduleRes.value);
     } catch {
       // Ignore
     } finally {
@@ -72,195 +75,85 @@ export function AdminOverviewPage() {
     onVolunteerChanged: fetchOverview,
   });
 
-  const openActivitiesCount = useMemo(
-    () =>
-      activities.filter((a) => a.status === "OPEN" || a.status === "ONGOING")
-        .length,
-    [activities],
-  );
-
-  // 1. Thẻ thống kê StatCards
+  // 1. Thẻ thống kê StatCards từ /api/dashboard/summary
   const stats: StatCardProps[] = useMemo(
     () => [
       {
         label: "Đơn vị Đoàn - Hội",
-        value: organizations.length,
+        value: summary?.totalOrganizations ?? 0,
         unit: "đơn vị",
         description: "Khoa, Ban, CLB & Đội trực thuộc",
         onClick: () => navigate("/admin/organizations"),
       },
       {
         label: "Chiến dịch Tình nguyện",
-        value: campaigns.length,
+        value: summary?.totalCampaigns ?? 0,
         unit: "chiến dịch",
-        description: "Mùa Hè Xanh, Tiếp Sức Mùa Thi...",
+        description: `${summary?.activeCampaigns ?? 0} đang diễn ra / sắp tới`,
         onClick: () => navigate("/admin/campaigns"),
       },
       {
         label: "Hoạt động Tình nguyện",
-        value: activities.length,
+        value: summary?.totalActivities ?? 0,
         unit: "hoạt động",
-        description: `${openActivitiesCount} đang mở ĐK / diễn ra`,
+        description: `${summary?.openOrOngoingActivities ?? 0} đang mở ĐK / diễn ra`,
         highlight: true,
         onClick: () => navigate("/admin/activities"),
       },
       {
         label: "Tình nguyện viên",
-        value: volunteerCount,
+        value: summary?.totalVolunteers ?? 0,
         unit: "sinh viên",
-        description: "Đoàn viên & sinh viên toàn trường",
+        description: `${summary?.totalPendingRegistrations ?? 0} đơn ĐK đang chờ duyệt`,
         onClick: () => navigate("/admin/volunteers"),
       },
     ],
-    [
-      organizations.length,
-      campaigns.length,
-      activities.length,
-      openActivitiesCount,
-      volunteerCount,
-      navigate,
-    ],
+    [summary, navigate],
   );
 
-  // 2. Biểu đồ xu hướng LineChart 6 tháng
-  const chartLabels = ["T5", "T6", "T7", "T8", "T9", "T10"];
-  const totalActCount = activities.length;
-  const totalVolCount = volunteerCount;
-
+  // 2. Biểu đồ xu hướng LineChart thật 6 tháng từ /api/dashboard/trends
+  const chartLabels = trends?.labels ?? [];
   const chartSeries = useMemo(
     () => [
       {
         id: "activities",
         label: "Hoạt động tổ chức",
-        values: [
-          Math.max(1, Math.round(totalActCount * 0.4)),
-          Math.max(2, Math.round(totalActCount * 0.6)),
-          Math.max(2, Math.round(totalActCount * 0.7)),
-          Math.max(3, Math.round(totalActCount * 0.85)),
-          Math.max(3, Math.round(totalActCount * 0.9)),
-          Math.max(4, totalActCount),
-        ],
+        values: trends?.activityCounts ?? [],
         tone: "primary" as const,
       },
       {
         id: "registrations",
         label: "Lượt đăng ký sinh viên",
-        values: [
-          Math.max(2, Math.round(totalVolCount * 0.3)),
-          Math.max(4, Math.round(totalVolCount * 0.5)),
-          Math.max(5, Math.round(totalVolCount * 0.65)),
-          Math.max(8, Math.round(totalVolCount * 0.8)),
-          Math.max(10, Math.round(totalVolCount * 0.9)),
-          Math.max(12, totalVolCount),
-        ],
+        values: trends?.registrationCounts ?? [],
         tone: "success" as const,
       },
     ],
-    [totalActCount, totalVolCount],
+    [trends],
   );
 
-  // 3. Hoạt động cần duyệt (Pending Info)
+  // 3. Hoạt động có đơn chờ duyệt thật từ /api/dashboard/pending-approvals
   const pending = useMemo(
     () => ({
       subtitle: "Xét duyệt nhanh danh sách sinh viên đăng ký tham gia",
       emptyTitle: "Không có hoạt động cần duyệt:",
       emptyHint:
         "Tất cả yêu cầu đăng ký tham gia tình nguyện đã được xử lý xong.",
-      items: activities
-        .filter((a) => a.status === "OPEN" || a.status === "ONGOING")
-        .slice(0, 5)
-        .map((act) => ({
-          id: act.id,
-          title: act.name,
-          subtitle: `${act.organizationName} • Khởi hành: ${formatDateTimeVN(act.startTime)}`,
-          statusBadge:
-            act.campaignName || getActivityStatusConfig(act.status).label,
-          actionLabel: "Duyệt ĐK",
-          onAction: () => setReviewActivity(act),
-        })),
+      items: pendingItems.map((item) => ({
+        id: item.activityId,
+        title: item.activityName,
+        subtitle: `${item.organizationName} • Khởi hành: ${formatDateTimeVN(item.startTime)}`,
+        statusBadge: `${item.pendingRegistrationCount} chờ duyệt`,
+        actionLabel: "Duyệt ĐK",
+        onAction: () =>
+          setReviewActivity({ id: item.activityId, name: item.activityName }),
+      })),
       onViewAll: () => navigate("/admin/activities"),
     }),
-    [activities, navigate],
+    [pendingItems, navigate],
   );
 
-  // 4. Lịch hoạt động tuần (Week Schedule)
+  // 4. Lịch hoạt động tuần thật từ /api/dashboard/schedule
   const weekData = useMemo(() => {
-    const now = new Date();
-    const dayOfWeek = now.getDay();
-    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const monday = new Date(now);
-    monday.setDate(now.getDate() + diffToMonday);
-    monday.setHours(0, 0, 0, 0);
-
-    const dayLabels = [
-      "Thứ Hai",
-      "Thứ Ba",
-      "Thứ Tư",
-      "Thứ Năm",
-      "Thứ Sáu",
-      "Thứ Bảy",
-      "Chủ Nhật",
-    ];
-
-    const days: DashboardWeekDay[] = [];
-
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-
-      const isToday =
-        d.getDate() === now.getDate() &&
-        d.getMonth() === now.getMonth() &&
-        d.getFullYear() === now.getFullYear();
-
-      const isPast = d < now && !isToday;
-
-      const dateStr = `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
-
-      // Tìm hoạt động có ngày bắt đầu trùng ngày này
-      const dayEvents: DashboardScheduleEvent[] = activities
-        .filter((act) => {
-          if (!act.startTime) return false;
-          const actDate = new Date(act.startTime);
-          return (
-            actDate.getDate() === d.getDate() &&
-            actDate.getMonth() === d.getMonth() &&
-            actDate.getFullYear() === d.getFullYear()
-          );
-        })
-        .map((act) => {
-          const actDate = new Date(act.startTime);
-          const hours = String(actDate.getHours()).padStart(2, "0");
-          const mins = String(actDate.getMinutes()).padStart(2, "0");
-          const time = `${hours}:${mins}`;
-          return {
-            id: act.id,
-            time,
-            title: act.name,
-            place:
-              act.locations?.[0]?.name ||
-              act.locations?.[0]?.address ||
-              act.organizationName,
-            leaderId: "all",
-            session: actDate.getHours() < 12 ? ("S" as const) : ("C" as const),
-          };
-        });
-
-      days.push({
-        id: `day-${i}`,
-        label: dayLabels[i],
-        date: dateStr,
-        today: isToday,
-        past: isPast,
-        weekend: i >= 5,
-        events: dayEvents,
-      });
-    }
-
-    const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
-    const rangeLabel = `${String(monday.getDate()).padStart(2, "0")}/${String(monday.getMonth() + 1).padStart(2, "0")} - ${String(sunday.getDate()).padStart(2, "0")}/${String(sunday.getMonth() + 1).padStart(2, "0")}`;
-
     const leaders: DashboardWeekLeader[] = [
       {
         id: "all",
@@ -269,57 +162,60 @@ export function AdminOverviewPage() {
       },
     ];
 
+    const days = (schedule?.days ?? []).map((day) => ({
+      ...day,
+      events: day.events.map((ev) => ({
+        id: ev.id,
+        time: ev.time,
+        title: ev.title,
+        place: ev.place,
+        leaderId: "all",
+        session: ev.session,
+      })),
+    }));
+
     return {
       title: "Lịch hoạt động tình nguyện tuần",
-      rangeLabel,
+      rangeLabel: schedule?.rangeLabel ?? "",
       days,
       leaders,
       emptyText: "Tuần này chưa có hoạt động tình nguyện nào khởi hành.",
     };
-  }, [activities]);
+  }, [schedule]);
 
-  // 5. Lịch hôm nay (Today)
+  // 5. Lịch hôm nay từ ngày today trong weekData
   const todayData = useMemo(() => {
     const todayObj = weekData.days.find((d) => d.today);
     const dateLabel = todayObj ? todayObj.date : "Hôm nay";
-
-    const events: DashboardScheduleEvent[] =
-      todayObj && todayObj.events.length > 0
-        ? todayObj.events
-        : activities.slice(0, 3).map((act) => {
-            const actDate = act.startTime ? new Date(act.startTime) : new Date();
-            const time = `${String(actDate.getHours()).padStart(2, "0")}:${String(actDate.getMinutes()).padStart(2, "0")}`;
-            return {
-              id: act.id,
-              time,
-              title: act.name,
-              place:
-                act.locations?.[0]?.name ||
-                act.locations?.[0]?.address ||
-                act.organizationName,
-              session:
-                actDate.getHours() < 12 ? ("S" as const) : ("C" as const),
-            };
-          });
+    const events: DashboardScheduleEvent[] = todayObj ? todayObj.events : [];
 
     return {
       dateLabel,
       events,
     };
-  }, [weekData, activities]);
+  }, [weekData]);
 
-  // 6. Thông báo (Notifications)
-  const notifications: DashboardNotification[] = useMemo(
-    () =>
-      activities.slice(0, 4).map((a, i) => ({
-        id: a.id,
-        title: `Phát động hoạt động "${a.name}"`,
-        sender: a.organizationName,
-        time: i === 0 ? "Hôm nay" : `${i + 1} ngày trước`,
-        unread: i < 2,
-      })),
-    [activities],
-  );
+  // 6. Thông báo nhanh từ danh sách đơn chờ duyệt & lịch tuần
+  const notifications: DashboardNotification[] = useMemo(() => {
+    if (pendingItems.length > 0) {
+      return pendingItems.slice(0, 4).map((item) => ({
+        id: item.activityId,
+        title: `"${item.activityName}" có ${item.pendingRegistrationCount} đơn chờ duyệt`,
+        sender: item.organizationName,
+        time: formatDateTimeVN(item.startTime),
+        unread: true,
+      }));
+    }
+
+    const weekEvents = (schedule?.days ?? []).flatMap((d) => d.events);
+    return weekEvents.slice(0, 4).map((ev) => ({
+      id: ev.id,
+      title: `Hoạt động "${ev.title}"`,
+      sender: ev.organizationName,
+      time: ev.time,
+      unread: false,
+    }));
+  }, [pendingItems, schedule]);
 
   // Nhãn ngày hiện tại
   const currentDateLabel = useMemo(() => {
@@ -361,7 +257,6 @@ export function AdminOverviewPage() {
         }
       />
 
-      {/* Block Dashboard chuẩn của DThU UI Kit hoặc Skeleton khi đang tải lần đầu */}
       {isInitialLoading ? (
         <AdminDashboardSkeleton />
       ) : (
@@ -387,7 +282,10 @@ export function AdminOverviewPage() {
         activity={reviewActivity}
         open={Boolean(reviewActivity)}
         onOpenChange={(open) => {
-          if (!open) setReviewActivity(null);
+          if (!open) {
+            setReviewActivity(null);
+            fetchOverview();
+          }
         }}
       />
     </div>
