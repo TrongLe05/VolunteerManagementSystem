@@ -5,7 +5,7 @@ using VolunteerManagerment.Application.Features.Attendances.Commands.CheckIn;
 using VolunteerManagerment.Application.Features.Attendances.Commands.CloseAttendanceSession;
 using VolunteerManagerment.Application.Features.Attendances.Commands.ManualMarkAttendance;
 using VolunteerManagerment.Application.Features.Attendances.Commands.OpenAttendanceSession;
-using VolunteerManagerment.Application.Features.Attendances.Queries;
+using VolunteerManagerment.Application.Features.Attendances.Queries.GetActiveSessionQuery;
 using VolunteerManagerment.Application.Features.Attendances.Queries.GetActivityAttendanceOverview;
 using VolunteerManagerment.Application.Features.Attendances.Queries.GetAttendanceSessions;
 using VolunteerManagerment.Application.Features.Attendances.Queries.GetSessionAttendances;

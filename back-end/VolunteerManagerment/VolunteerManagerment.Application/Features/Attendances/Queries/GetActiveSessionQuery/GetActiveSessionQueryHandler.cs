@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using VolunteerManagerment.Application.Common.Interfaces;
 using VolunteerManagerment.Application.Features.Attendances.DTOs;
 
-namespace VolunteerManagerment.Application.Features.Attendances.Queries;
+namespace VolunteerManagerment.Application.Features.Attendances.Queries.GetActiveSessionQuery;
 
 public class GetActiveSessionQueryHandler(
     IApplicationDbContext context,
