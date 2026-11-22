@@ -123,7 +123,9 @@ export function MyRegistrationsPage() {
       0,
     );
     // Ưu tiên lấy từ Sổ cái chính thức (VolunteerCreditRecord), nếu chưa có thì dùng computedDays
-    const totalDays = creditSummary ? creditSummary.totalCreditDays : computedDays;
+    const totalDays = creditSummary
+      ? creditSummary.totalCreditDays
+      : computedDays;
     const expectedDays = approved.reduce(
       (sum, r) => sum + (r.creditDay || 0),
       0,
@@ -188,7 +190,8 @@ export function MyRegistrationsPage() {
               Hoạt động Tình nguyện của tôi
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Quản lý lịch trình, tương tác điểm danh GPS & FaceID, theo dõi minh chứng ảnh chụp hiện trường và tích lũy ngày CTXH.
+              Quản lý lịch trình, tương tác điểm danh GPS & FaceID, theo dõi
+              minh chứng ảnh chụp hiện trường và tích lũy ngày CTXH.
             </p>
           </div>
           <Button
@@ -206,7 +209,9 @@ export function MyRegistrationsPage() {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <Card className="border-slate-200/90 bg-white shadow-2xs">
             <CardContent className="p-4">
-              <p className="text-xs font-medium text-muted-foreground">Đã đăng ký</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Đã đăng ký
+              </p>
               <p className="mt-1 text-2xl font-black text-slate-900">
                 {stats.total}
               </p>
@@ -214,7 +219,9 @@ export function MyRegistrationsPage() {
           </Card>
           <Card className="border-slate-200/90 bg-white shadow-2xs">
             <CardContent className="p-4">
-              <p className="text-xs font-medium text-muted-foreground">Đã duyệt tham gia</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Đã duyệt tham gia
+              </p>
               <p className="mt-1 text-2xl font-black text-emerald-600">
                 {stats.approvedCount}
               </p>
@@ -222,7 +229,9 @@ export function MyRegistrationsPage() {
           </Card>
           <Card className="border-slate-200/90 bg-white shadow-2xs">
             <CardContent className="p-4">
-              <p className="text-xs font-medium text-muted-foreground">Đã đạt đủ 2/2 lượt</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                Đã đạt đủ 2/2 lượt
+              </p>
               <p className="mt-1 text-2xl font-black text-indigo-600">
                 {stats.completedCount}
               </p>
@@ -299,12 +308,14 @@ export function MyRegistrationsPage() {
               const hasAttendances = attendances.length > 0;
               const hasCheckIn = attendances.some(
                 (a) =>
-                  (a.sessionType === "CHECK_IN" || a.sessionType?.toUpperCase().includes("IN")) &&
+                  (a.sessionType === "CHECK_IN" ||
+                    a.sessionType?.toUpperCase().includes("IN")) &&
                   a.status === "APPROVED",
               );
               const hasCheckOut = attendances.some(
                 (a) =>
-                  (a.sessionType === "CHECK_OUT" || a.sessionType?.toUpperCase().includes("OUT")) &&
+                  (a.sessionType === "CHECK_OUT" ||
+                    a.sessionType?.toUpperCase().includes("OUT")) &&
                   a.status === "APPROVED",
               );
               const isCompletedBoth = hasCheckIn && hasCheckOut;
@@ -334,7 +345,8 @@ export function MyRegistrationsPage() {
                       </CardTitle>
 
                       <CardDescription className="text-xs text-slate-500">
-                        Đăng ký tham gia lúc: {formatDateTimeVN(item.registeredAt)}
+                        Đăng ký tham gia lúc:{" "}
+                        {formatDateTimeVN(item.registeredAt)}
                       </CardDescription>
                     </div>
 
@@ -431,14 +443,16 @@ export function MyRegistrationsPage() {
                       </span>
                       {isCompletedBoth ? (
                         <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700">
-                          <Award className="size-3.5" />+{item.creditDay} ngày (Đã đạt)
+                          <Award className="size-3.5" />+{item.creditDay} ngày
+                          (Đã đạt)
                         </span>
                       ) : (
                         <span
                           className="inline-flex items-center gap-1.5 font-medium text-slate-500"
                           title="Cần hoàn thành đủ 2 lượt Check-in và Check-out để được cộng ngày công"
                         >
-                          <Award className="size-3.5 text-slate-400" />+{item.creditDay} ngày (Cần đủ 2 lượt)
+                          <Award className="size-3.5 text-slate-400" />+
+                          {item.creditDay} ngày (Cần đủ 2 lượt)
                         </span>
                       )}
                     </div>
@@ -446,16 +460,20 @@ export function MyRegistrationsPage() {
                     <div className="flex flex-wrap items-center gap-2 self-end sm:self-auto">
                       {/* Nút điểm danh nhanh nếu đang diễn ra */}
                       {item.activityStatus === "ONGOING" &&
-                        item.registrationStatus === "APPROVED" && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleOpenCheckIn(item.activityId)}
-                            className="gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-xs hover:from-blue-700 hover:to-indigo-700 text-xs h-8.5 rounded-lg cursor-pointer"
-                          >
-                            <ScanFace className="size-4" />
-                            <span>Điểm danh ngay</span>
-                          </Button>
-                        )}
+                      item.registrationStatus === "APPROVED" ? (
+                        <Button
+                          size="sm"
+                          onClick={() => handleOpenCheckIn(item.activityId)}
+                          className="gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-xs hover:from-blue-700 hover:to-indigo-700 text-xs h-8.5 rounded-lg cursor-pointer"
+                        >
+                          <ScanFace className="size-4" />
+                          <span>Điểm danh ngay</span>
+                        </Button>
+                      ) : (
+                        <div>
+                          Đang chờ cán bộ xét duyệt đơn đăng ký của bạn.
+                        </div>
+                      )}
 
                       {/* Nút liên kết chi tiết */}
                       <Button

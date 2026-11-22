@@ -47,7 +47,7 @@ public class ActivityRegistration : BaseEntity
     /// </summary>
     public void EnsureEligibleForCheckIn()
     {
-        if (Status is not ("APPROVED" or "REGISTERED"))
+        if (Status is not ("APPROVED"))
             throw new DomainException("Hồ sơ đăng ký của bạn chưa được duyệt hoặc đã bị hủy.");
     }
 

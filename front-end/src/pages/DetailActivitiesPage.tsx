@@ -471,100 +471,102 @@ export const DetailActivitiesPage = () => {
         )}
 
         {/* Banner Điểm danh Trực tiếp (Step A) */}
-        {activeSession && sessionRemainingSeconds > 0 && (
-          <div
-            className={`relative overflow-hidden rounded-2xl border p-4 sm:p-5 shadow-lg transition-all ${
-              activeSession.hasAttended
-                ? "border-emerald-500/40 bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-900 text-white"
-                : "border-rose-500/40 bg-gradient-to-r from-slate-950 via-rose-950 to-amber-950 text-white shadow-rose-950/20"
-            }`}
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-start sm:items-center gap-3.5">
-                <div
-                  className={`flex size-12 shrink-0 items-center justify-center rounded-xl shadow-md ${
-                    activeSession.hasAttended
-                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
-                      : "bg-rose-500/20 text-rose-300 border border-rose-400/30"
-                  }`}
-                >
+        {registrationStatus === "APPROVED" &&
+          activeSession &&
+          sessionRemainingSeconds > 0 && (
+            <div
+              className={`relative overflow-hidden rounded-2xl border p-4 sm:p-5 shadow-lg transition-all ${
+                activeSession.hasAttended
+                  ? "border-emerald-500/40 bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-900 text-white"
+                  : "border-rose-500/40 bg-gradient-to-r from-slate-950 via-rose-950 to-amber-950 text-white shadow-rose-950/20"
+              }`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-start sm:items-center gap-3.5">
+                  <div
+                    className={`flex size-12 shrink-0 items-center justify-center rounded-xl shadow-md ${
+                      activeSession.hasAttended
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
+                        : "bg-rose-500/20 text-rose-300 border border-rose-400/30"
+                    }`}
+                  >
+                    {activeSession.hasAttended ? (
+                      <CheckCheck className="size-6 text-emerald-400" />
+                    ) : (
+                      <ScanFace className="size-6 text-rose-400 animate-pulse" />
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="relative flex size-2.5">
+                        <span
+                          className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                            activeSession.hasAttended
+                              ? "bg-emerald-400"
+                              : "bg-rose-400"
+                          }`}
+                        />
+                        <span
+                          className={`relative inline-flex rounded-full size-2.5 ${
+                            activeSession.hasAttended
+                              ? "bg-emerald-500"
+                              : "bg-rose-500"
+                          }`}
+                        />
+                      </span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                        Phiên điểm danh trực tiếp
+                      </span>
+                      <Badge
+                        className={`text-[11px] font-bold ${
+                          activeSession.type === "CHECK_IN"
+                            ? "bg-blue-500/20 text-blue-200 border-blue-400/40"
+                            : "bg-purple-500/20 text-purple-200 border-purple-400/40"
+                        }`}
+                      >
+                        {activeSession.type === "CHECK_IN"
+                          ? "ĐIỂM DANH VÀO"
+                          : "ĐIỂM DANH RA"}
+                      </Badge>
+                    </div>
+
+                    <p className="text-sm font-semibold text-white">
+                      {activeSession.hasAttended
+                        ? "Bạn đã hoàn thành điểm danh cho phiên này."
+                        : "Ban tổ chức đang mở cổng điểm danh! Vui lòng xác thực GPS và chụp ảnh khuôn mặt selfie."}
+                    </p>
+
+                    <div className="flex items-center gap-2 text-xs text-slate-300">
+                      <Clock className="size-3.5 text-amber-400" />
+                      <span>Thời gian mở cổng còn lại:</span>
+                      <span className="font-mono font-bold text-amber-300 text-sm">
+                        {formatCountdown(sessionRemainingSeconds)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="shrink-0 flex items-center gap-2.5">
                   {activeSession.hasAttended ? (
-                    <CheckCheck className="size-6 text-emerald-400" />
+                    <Badge className="bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 px-3.5 py-1.5 text-xs font-semibold gap-1.5">
+                      <CheckCircle2 className="size-4 text-emerald-400" />
+                      Đã điểm danh hợp lệ
+                    </Badge>
                   ) : (
-                    <ScanFace className="size-6 text-rose-400 animate-pulse" />
+                    <Button
+                      onClick={() => setIsCheckInModalOpen(true)}
+                      size="default"
+                      className="bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-bold shadow-lg gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
+                    >
+                      <ScanFace className="size-4" />
+                      Điểm danh ngay (GPS + Khuôn mặt)
+                    </Button>
                   )}
                 </div>
-
-                <div className="space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="relative flex size-2.5">
-                      <span
-                        className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                          activeSession.hasAttended
-                            ? "bg-emerald-400"
-                            : "bg-rose-400"
-                        }`}
-                      />
-                      <span
-                        className={`relative inline-flex rounded-full size-2.5 ${
-                          activeSession.hasAttended
-                            ? "bg-emerald-500"
-                            : "bg-rose-500"
-                        }`}
-                      />
-                    </span>
-                    <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
-                      Phiên điểm danh trực tiếp
-                    </span>
-                    <Badge
-                      className={`text-[11px] font-bold ${
-                        activeSession.type === "CHECK_IN"
-                          ? "bg-blue-500/20 text-blue-200 border-blue-400/40"
-                          : "bg-purple-500/20 text-purple-200 border-purple-400/40"
-                      }`}
-                    >
-                      {activeSession.type === "CHECK_IN"
-                        ? "ĐIỂM DANH VÀO"
-                        : "ĐIỂM DANH RA"}
-                    </Badge>
-                  </div>
-
-                  <p className="text-sm font-semibold text-white">
-                    {activeSession.hasAttended
-                      ? "Bạn đã hoàn thành điểm danh cho phiên này."
-                      : "Ban tổ chức đang mở cổng điểm danh! Vui lòng xác thực GPS và chụp ảnh khuôn mặt selfie."}
-                  </p>
-
-                  <div className="flex items-center gap-2 text-xs text-slate-300">
-                    <Clock className="size-3.5 text-amber-400" />
-                    <span>Thời gian mở cổng còn lại:</span>
-                    <span className="font-mono font-bold text-amber-300 text-sm">
-                      {formatCountdown(sessionRemainingSeconds)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="shrink-0 flex items-center gap-2.5">
-                {activeSession.hasAttended ? (
-                  <Badge className="bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 px-3.5 py-1.5 text-xs font-semibold gap-1.5">
-                    <CheckCircle2 className="size-4 text-emerald-400" />
-                    Đã điểm danh hợp lệ
-                  </Badge>
-                ) : (
-                  <Button
-                    onClick={() => setIsCheckInModalOpen(true)}
-                    size="default"
-                    className="bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-bold shadow-lg gap-2 cursor-pointer transition-all transform hover:scale-[1.02]"
-                  >
-                    <ScanFace className="size-4" />
-                    Điểm danh ngay (GPS + Khuôn mặt)
-                  </Button>
-                )}
               </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Hero Card Đầu Trang */}
         <Card className="relative overflow-hidden rounded-2xl border border-blue-900/40 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 p-6 sm:p-8 text-white shadow-xl">
@@ -736,7 +738,8 @@ export const DetailActivitiesPage = () => {
                   Quyền lợi Tình nguyện viên
                 </CardTitle>
                 <CardDescription>
-                  Chế độ ghi nhận ngày công tác xã hội cho sinh viên ĐH Đồng Tháp
+                  Chế độ ghi nhận ngày công tác xã hội cho sinh viên ĐH Đồng
+                  Tháp
                 </CardDescription>
               </CardHeader>
               <Separator />
@@ -1009,38 +1012,40 @@ export const DetailActivitiesPage = () => {
                 <Separator />
 
                 {/* Điểm danh trực tiếp trong Panel Hành động */}
-                {activeSession && sessionRemainingSeconds > 0 && (
-                  <div className="rounded-xl border border-rose-300 bg-rose-50/70 p-3.5 space-y-2.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-rose-800 flex items-center gap-1.5">
-                        <ScanFace className="size-4 text-rose-600 animate-pulse" />
-                        {activeSession.type === "CHECK_IN"
-                          ? "Điểm danh VÀO"
-                          : "Điểm danh RA"}
-                      </span>
-                      <span className="font-mono font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-md text-[11px]">
-                        Còn {formatCountdown(sessionRemainingSeconds)}
-                      </span>
-                    </div>
-
-                    {activeSession.hasAttended ? (
-                      <div className="flex items-center gap-2 rounded-lg bg-emerald-100/90 border border-emerald-300 px-3 py-2 text-xs font-semibold text-emerald-800">
-                        <CheckCheck className="size-4 text-emerald-600 shrink-0" />
-                        <span>Bạn đã điểm danh thành công!</span>
+                {registrationStatus === "APPROVED" &&
+                  activeSession &&
+                  sessionRemainingSeconds > 0 && (
+                    <div className="rounded-xl border border-rose-300 bg-rose-50/70 p-3.5 space-y-2.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-bold text-rose-800 flex items-center gap-1.5">
+                          <ScanFace className="size-4 text-rose-600 animate-pulse" />
+                          {activeSession.type === "CHECK_IN"
+                            ? "Điểm danh VÀO"
+                            : "Điểm danh RA"}
+                        </span>
+                        <span className="font-mono font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-md text-[11px]">
+                          Còn {formatCountdown(sessionRemainingSeconds)}
+                        </span>
                       </div>
-                    ) : (
-                      <Button
-                        type="button"
-                        size="default"
-                        onClick={() => setIsCheckInModalOpen(true)}
-                        className="w-full bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 font-bold text-white shadow-md gap-2"
-                      >
-                        <ScanFace className="size-4" />
-                        Điểm danh ngay (GPS + Khuôn mặt)
-                      </Button>
-                    )}
-                  </div>
-                )}
+
+                      {activeSession.hasAttended ? (
+                        <div className="flex items-center gap-2 rounded-lg bg-emerald-100/90 border border-emerald-300 px-3 py-2 text-xs font-semibold text-emerald-800">
+                          <CheckCheck className="size-4 text-emerald-600 shrink-0" />
+                          <span>Bạn đã điểm danh thành công!</span>
+                        </div>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="default"
+                          onClick={() => setIsCheckInModalOpen(true)}
+                          className="w-full bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 font-bold text-white shadow-md gap-2"
+                        >
+                          <ScanFace className="size-4" />
+                          Điểm danh ngay (GPS + Khuôn mặt)
+                        </Button>
+                      )}
+                    </div>
+                  )}
 
                 {/* Nút Hành Động Đăng Ký */}
                 <div className="space-y-2 pt-1">
