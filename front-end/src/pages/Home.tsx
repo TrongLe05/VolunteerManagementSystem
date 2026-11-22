@@ -54,7 +54,7 @@ export default function Home() {
   const fetchFeedData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [actRes, campRes, orgRes] = await Promise.all([
+      const [actRes, campRes, orgRes] = await Promise.allSettled([
         activityApi.getAll({
           searchTerm: searchTerm.trim() || undefined,
           organizationId: selectedOrgId || undefined,
@@ -67,9 +67,13 @@ export default function Home() {
         organizationApi.getAll(),
       ]);
 
-      setActivities(actRes.items || []);
-      setCampaigns(campRes.items || []);
-      setOrganizations(orgRes || []);
+      setActivities(
+        actRes.status === "fulfilled" ? actRes.value.items || [] : [],
+      );
+      setCampaigns(
+        campRes.status === "fulfilled" ? campRes.value.items || [] : [],
+      );
+      setOrganizations(orgRes.status === "fulfilled" ? orgRes.value || [] : []);
     } catch {
       // Fallback empty on error
     } finally {
@@ -130,8 +134,13 @@ export default function Home() {
     const completed = approved.filter((r) =>
       isCompletedBothAttendanceSessions(r.attendances),
     );
-    const fallbackDays = completed.reduce((sum, r) => sum + (r.creditDay || 0), 0);
-    const totalDays = creditSummary ? creditSummary.totalCreditDays : fallbackDays;
+    const fallbackDays = completed.reduce(
+      (sum, r) => sum + (r.creditDay || 0),
+      0,
+    );
+    const totalDays = creditSummary
+      ? creditSummary.totalCreditDays
+      : fallbackDays;
     return {
       totalRegistered: myRegistrations.filter(
         (r) => r.registrationStatus !== "CANCELLED",
@@ -179,13 +188,12 @@ export default function Home() {
 
           <section className="space-y-4 lg:col-span-6">
             {/* Thanh Story hoạt động tình nguyện phong cách Facebook */}
-            {!searchTerm && (
-              isLoading ? (
+            {!searchTerm &&
+              (isLoading ? (
                 <VolunteerStoriesSkeleton />
               ) : activities.length > 0 ? (
                 <VolunteerStoriesBar activities={activities} />
-              ) : null
-            )}
+              ) : null)}
 
             {searchTerm && (
               <div className="flex items-center justify-between rounded-xl border border-blue-200/80 bg-blue-50/70 px-4 py-2.5 text-xs text-blue-900 shadow-2xs">
