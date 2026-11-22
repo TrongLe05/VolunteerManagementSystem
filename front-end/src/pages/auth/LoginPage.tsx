@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { Award, Building2, MapPin, ScanFace, ShieldCheck } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
@@ -70,6 +70,42 @@ export function LoginPage() {
   }>({});
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
+
+  const googleBtnContainerRef = useRef<HTMLDivElement>(null);
+  const [googleBtnWidth, setGoogleBtnWidth] = useState<number>(() => {
+    if (typeof window === "undefined") return 300;
+    // Ước lượng an toàn ngay từ lần render đầu tiên (không bao giờ ẩn nút)
+    return Math.min(384, Math.max(220, window.innerWidth - 96));
+  });
+
+  useEffect(() => {
+    const el = googleBtnContainerRef.current;
+    if (!el) return;
+
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const updateWidth = () => {
+      const measured = Math.floor(el.getBoundingClientRect().width);
+      if (measured > 0) {
+        // Google Identity Services nhận width 200-400px; chừa 4px tránh bị cắt viền trong iframe
+        const nextWidth = Math.min(384, Math.max(200, measured - 4));
+        setGoogleBtnWidth((prev) => (prev === nextWidth ? prev : nextWidth));
+      }
+    };
+
+    updateWidth();
+
+    const observer = new ResizeObserver(() => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(updateWidth, 120);
+    });
+    observer.observe(el);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      observer.disconnect();
+    };
+  }, []);
 
   const locationState = location.state as {
     from?: { pathname: string };
@@ -208,18 +244,23 @@ export function LoginPage() {
         ssoLabel="Đăng nhập bằng Google"
         ssoIcon={<FcGoogle />}
         ssoSlot={
-          <GoogleLogin
-            onSuccess={(credentialResponse) =>
-              handleGoogleSuccess(credentialResponse.credential)
-            }
-            onError={() =>
-              setErrorMessage("Đăng nhập bằng Google không thành công.")
-            }
-            width="384"
-            text="signin_with"
-            shape="pill"
-            size="large"
-          />
+          <div
+            ref={googleBtnContainerRef}
+            className="flex min-h-[44px] w-full min-w-0 justify-center"
+          >
+            <GoogleLogin
+              onSuccess={(credentialResponse) =>
+                handleGoogleSuccess(credentialResponse.credential)
+              }
+              onError={() =>
+                setErrorMessage("Đăng nhập bằng Google không thành công.")
+              }
+              width={String(googleBtnWidth)}
+              text="signin_with"
+              shape="pill"
+              size="large"
+            />
+          </div>
         }
       />
 

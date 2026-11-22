@@ -299,7 +299,7 @@ export function LoginPage({
               hoặc
             </div>
             {ssoSlot ? (
-              <div className="flex w-full justify-center">{ssoSlot}</div>
+              <div className="flex w-full min-w-0 justify-center">{ssoSlot}</div>
             ) : (
               <button
                 type="button"
