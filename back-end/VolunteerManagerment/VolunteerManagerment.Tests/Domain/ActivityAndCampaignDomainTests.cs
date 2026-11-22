@@ -195,7 +195,8 @@ public class ActivityAndCampaignDomainTests
             .Should().Throw<DomainException>().WithMessage("*Bạn đã đăng ký hoạt động này rồi*");
         registration.Invoking(r => r.Reactivate(now))
             .Should().Throw<DomainException>().WithMessage("*Chỉ có thể kích hoạt lại đơn đăng ký đã huỷ*");
-        registration.Invoking(r => r.EnsureEligibleForCheckIn()).Should().NotThrow();
+        registration.Invoking(r => r.EnsureEligibleForCheckIn())
+            .Should().Throw<DomainException>().WithMessage("*chưa được duyệt hoặc đã bị hủy*");
 
         // 2. Không thể huỷ khi hoạt động đã bắt đầu
         registration.Invoking(r => r.Cancel(now.AddMinutes(-5), now))

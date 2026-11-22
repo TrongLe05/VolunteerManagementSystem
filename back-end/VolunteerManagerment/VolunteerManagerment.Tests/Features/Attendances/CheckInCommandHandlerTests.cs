@@ -245,7 +245,7 @@ public class CheckInCommandHandlerTests
             Id = Guid.NewGuid(),
             ActivityId = activity.Id,
             VolunteerId = volunteer.Id,
-            Status = "REGISTERED",
+            Status = "APPROVED",
             Activity = activity
         };
         var session = new AttendanceSession
