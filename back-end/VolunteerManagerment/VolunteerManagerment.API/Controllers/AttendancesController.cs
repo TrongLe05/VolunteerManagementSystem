@@ -9,6 +9,7 @@ using VolunteerManagerment.Application.Features.Attendances.Queries.GetActiveSes
 using VolunteerManagerment.Application.Features.Attendances.Queries.GetActivityAttendanceOverview;
 using VolunteerManagerment.Application.Features.Attendances.Queries.GetAttendanceSessions;
 using VolunteerManagerment.Application.Features.Attendances.Queries.GetSessionAttendances;
+using VolunteerManagerment.Application.Features.Attendances.Queries.GetSuspiciousAttendances;
 
 namespace VolunteerManagerment.API.Controllers
 {
@@ -86,6 +87,15 @@ namespace VolunteerManagerment.API.Controllers
         public async Task<IActionResult> CheckIn([FromBody] CheckInCommand command, CancellationToken cancellationToken)
         {
             var result = await sender.Send(command, cancellationToken);
+            return Ok(result);
+        }
+
+        // Lấy danh sách các điểm danh khả nghi 
+        [HttpGet("suspicious")]
+        [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN")]
+        public async Task<IActionResult> GetSuspiciousAttendances([FromQuery] GetSuspiciousAttendancesQuery query, CancellationToken cancellationToken)
+        {
+            var result = await sender.Send(query, cancellationToken);
             return Ok(result);
         }
     }
