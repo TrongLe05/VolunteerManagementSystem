@@ -11,6 +11,7 @@ import {
   KeyRound,
   LayoutDashboard,
   LogOut,
+  ShieldAlert,
   User,
   Users,
 } from "lucide-react";
@@ -61,6 +62,12 @@ const TAB_MAP: Record<
     label: "Tình nguyện viên",
     icon: <GraduationCap className="size-3.5" />,
     href: "/admin/volunteers",
+  },
+  "/admin/suspicious-attendances": {
+    id: "suspicious-attendances",
+    label: "Nghi vấn điểm danh",
+    icon: <ShieldAlert className="size-3.5" />,
+    href: "/admin/suspicious-attendances",
   },
   "/admin/users": {
     id: "users",
@@ -137,6 +144,12 @@ export function AdminLayout() {
         icon: <GraduationCap />,
         href: "/admin/volunteers",
       },
+      {
+        id: "suspicious-attendances",
+        label: "Nghi vấn điểm danh",
+        icon: <ShieldAlert />,
+        href: "/admin/suspicious-attendances",
+      },
       ...(isSuperAdmin
         ? [
             {
@@ -166,6 +179,8 @@ export function AdminLayout() {
     if (location.pathname.startsWith("/admin/organizations"))
       return "organizations";
     if (location.pathname.startsWith("/admin/volunteers")) return "volunteers";
+    if (location.pathname.startsWith("/admin/suspicious-attendances"))
+      return "suspicious-attendances";
     if (location.pathname.startsWith("/admin/users")) return "users";
     if (location.pathname.startsWith("/admin/audit-logs")) return "audit-logs";
     return "dashboard";

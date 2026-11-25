@@ -122,3 +122,40 @@ export interface CheckInResult {
   distanceMeters: number;
   isInsideGeofence: boolean;
 }
+
+export type SuspiciousAttendanceStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface SuspiciousAttendanceItem {
+  attendanceId: string;
+  activityId: string;
+  activityName: string;
+  organizationName: string;
+  volunteerId: string;
+  volunteerName: string;
+  studentCode?: string | null;
+  sessionType: AttendanceSessionType | string;
+  attendedAt: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  locationAccuracyMeters?: number | null;
+  locationStatus: string;
+  status: SuspiciousAttendanceStatus | string;
+  capturedImageUrl?: string | null;
+  note?: string | null;
+  reviewedAt?: string | null;
+  reviewerEmail?: string | null;
+}
+
+export interface GetSuspiciousAttendancesParams {
+  status?: string;
+  searchTerm?: string;
+  activityId?: string;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export interface ReviewSuspiciousAttendanceRequest {
+  attendanceId: string;
+  status: "APPROVED" | "REJECTED";
+  note?: string | null;
+}

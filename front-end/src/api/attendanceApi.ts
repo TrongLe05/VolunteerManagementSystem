@@ -7,8 +7,11 @@ import type {
   AttendanceSessionFilter,
   CheckInRequest,
   CheckInResult,
+  GetSuspiciousAttendancesParams,
   ManualMarkRequest,
   OpenSessionRequest,
+  ReviewSuspiciousAttendanceRequest,
+  SuspiciousAttendanceItem,
 } from "@/types/attendance.types";
 import type { PageResult } from "@/types/volunteer.types";
 
@@ -80,6 +83,28 @@ export const attendanceApi = {
   checkIn: async (data: CheckInRequest): Promise<CheckInResult> => {
     const response = await axiosClient.post<CheckInResult>(
       "/attendances/check-in",
+      data
+    );
+    return response.data;
+  },
+
+  // GET /attendances/suspicious
+  getSuspicious: async (
+    params?: GetSuspiciousAttendancesParams
+  ): Promise<PageResult<SuspiciousAttendanceItem>> => {
+    const response = await axiosClient.get<PageResult<SuspiciousAttendanceItem>>(
+      "/attendances/suspicious",
+      { params }
+    );
+    return response.data;
+  },
+
+  // PUT /attendances/{id}/review
+  reviewSuspicious: async (
+    data: ReviewSuspiciousAttendanceRequest
+  ): Promise<{ success: boolean }> => {
+    const response = await axiosClient.put<{ success: boolean }>(
+      `/attendances/${data.attendanceId}/review`,
       data
     );
     return response.data;
