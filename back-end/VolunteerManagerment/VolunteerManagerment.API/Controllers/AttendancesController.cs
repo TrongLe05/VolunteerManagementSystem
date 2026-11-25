@@ -5,6 +5,7 @@ using VolunteerManagerment.Application.Features.Attendances.Commands.CheckIn;
 using VolunteerManagerment.Application.Features.Attendances.Commands.CloseAttendanceSession;
 using VolunteerManagerment.Application.Features.Attendances.Commands.ManualMarkAttendance;
 using VolunteerManagerment.Application.Features.Attendances.Commands.OpenAttendanceSession;
+using VolunteerManagerment.Application.Features.Attendances.Commands.ReviewSuspiciousAttendance;
 using VolunteerManagerment.Application.Features.Attendances.Queries.GetActiveSessionQuery;
 using VolunteerManagerment.Application.Features.Attendances.Queries.GetActivityAttendanceOverview;
 using VolunteerManagerment.Application.Features.Attendances.Queries.GetAttendanceSessions;
@@ -97,6 +98,17 @@ namespace VolunteerManagerment.API.Controllers
         {
             var result = await sender.Send(query, cancellationToken);
             return Ok(result);
+        }
+
+        // Duyệt điểm danh khả nghi
+        [HttpPut("{id}/review")]
+        [Authorize(Roles = "SUPER_ADMIN,ORGANIZATION_ADMIN")]
+        public async Task<IActionResult> ReviewSuspiciousAttendance([FromRoute] Guid id, [FromBody] ReviewSuspiciousAttendanceCommand command, CancellationToken cancellationToken)
+        {
+            if (id != command.AttendanceId)
+                return BadRequest("ID trong URL không khớp với ID trong body.");
+            var result = await sender.Send(command, cancellationToken);
+            return Ok(new { success = result });
         }
     }
 }
